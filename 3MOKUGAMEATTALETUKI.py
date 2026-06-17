@@ -47,10 +47,10 @@ class Othello25:
         self.attack_chance_available = True
         pyxel.stop()
         if js:
-        try:
-            js.showTitleBG()
-        except:
-            pass
+            try:
+                js.showTitleBG()
+            except:
+                pass
 
     def get_flips(self, x, y, player_turn):
         if self.grids[y][x] != 0: return []
