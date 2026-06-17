@@ -46,7 +46,7 @@ class Othello25:
         self.pass_timer = 0
         self.attack_chance_available = True
         pyxel.stop()
-         if js:
+        if js:
         try:
             js.showTitleBG()
         except:
