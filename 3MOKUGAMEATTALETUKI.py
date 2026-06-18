@@ -38,8 +38,8 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        self.scene = "TITLE"
-        self.transition_timer = 0
+        self.scene = "TITLE_START"
+        self.transition_timer = 90
         pyxel.stop()
         if js:
             try: js.showTitleBG()
@@ -123,15 +123,13 @@ class Othello25:
                 elif self.status == 2: js.showLoseBG()
             except: pass
         pyxel.play(3, 2 if self.status == 1 else 3)
-        
 
     def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
-        if self.scene == "RESULT_START":
+        if self.scene == "TITLE_START" or self.scene == "RESULT_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0:
-                self.reset_game()
-            return
+                if self.scene == "TITLE_START":
                     self.scene = "TITLE"
                 else:
                     self.reset_game()
@@ -188,13 +186,13 @@ class Othello25:
                     if self.grids[y][x]:
                         u, v = CHARACTER_LIST[self.grids[y][x] - 1]
                         pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
-       　if self.scene != "RESULT_START":     
-            pyxel.text(2, SCREEN_SIZE - 8, "YOU" if self.turn == 1 else "CPU", 7)
-            if self.pass_timer > 0:
-                pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
-            if self.scene == "ATTACK_CHANCE":
-                c = 10 if pyxel.frame_count % 10 < 5 else 7
-                pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
-                pyxel.text(2, 20, "ATTACK!", 10)
+            if self.scene != "RESULT_START":
+                pyxel.text(2, SCREEN_SIZE - 8, "YOU" if self.turn == 1 else "CPU", 7)
+                if self.pass_timer > 0:
+                    pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
+                if self.scene == "ATTACK_CHANCE":
+                    c = 10 if pyxel.frame_count % 10 < 5 else 7
+                    pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
+                    pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
