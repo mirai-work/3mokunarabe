@@ -1,15 +1,4 @@
-import pyxel
-import random
-
-try:
-    import js
-except ImportError:
-    class DummyJS:
-        def showTitle(self): pass
-        def showGame(self): pass
-        def showWin(self): pass
-        def showLose(self): pass
-    js = DummyJS()
+import pyxel, random, js
 
 class Attack25Game:
     def __init__(self):
@@ -19,14 +8,14 @@ class Attack25Game:
         pyxel.run(self.update, self.draw)
 
     def reset_game(self):
-        self.state = "TITLE"
+        # 演出用タイマーと状態管理
+        self.state = "TITLE_IMG"
+        self.timer = 0
         self.level = 1
         self.board = [0] * 25
         self.turn = 1
         self.ai_delay = 0
-        self.attack_chance_used = False
         self.start_x, self.start_y = 35, 25
-        self.p_w, self.p_h, self.p_gap = 16, 16, 2
 
     def get_flippable(self, idx, color):
         res, opp = [], 3 - color
@@ -56,23 +45,25 @@ class Attack25Game:
         return s if s else (a if a else e)
 
     def update(self):
-        def update(self):
-            if self.state == "TITLE":
-                if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                    mx, my = pyxel.mouse_x, pyxel.mouse_y
-                    # クリック判定のY座標を、LVテキストの表示位置に合わせました
-                    # LV1:50(45-60), LV2:70(65-80), LV3:90(85-100)
-                    if 45 <= my <= 60:
-                        self.level = 1
-                        self.reset_game(); self.state = "PLAYING"; js.showGame()
-                    elif 65 <= my <= 80:
-                        self.level = 2
-                        self.reset_game(); self.state = "PLAYING"; js.showGame()
-                    elif 85 <= my <= 100:
-                        self.level = 3
-                        self.reset_game(); self.state = "PLAYING"; js.showGame()
+        self.timer += 1
         
-            elif self.state == "PLAYING":
+        # 5秒間の画像演出管理 (30fps * 5s = 150フレーム)
+        if self.state == "TITLE_IMG" and self.timer >= 150:
+            self.state = "TITLE"; js.showTitle()
+        elif self.state in ["WIN_IMG", "LOSE_IMG"] and self.timer >= 150:
+            self.state = "RESULT"; js.showResult("WIN!" if "WIN" in self.state else "LOSE!")
+
+        # メニュー選択
+        if self.state == "TITLE" and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            my = pyxel.mouse_y
+            if 60 <= my <= 110:
+                self.level = 1 if my < 75 else (2 if my < 90 else 3)
+                self.board = [0] * 25
+                self.state = "PLAYING"
+                js.showGame()
+        
+        # ゲームプレイ
+        elif self.state == "PLAYING":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 c, r = (pyxel.mouse_x - self.start_x) // 18, (pyxel.mouse_y - self.start_y) // 18
                 if 0 <= c < 5 and 0 <= r < 5 and (idx := r * 5 + c) in self.get_valid_moves(1):
@@ -90,24 +81,22 @@ class Attack25Game:
                         self.board[idx] = 2
                         for f in self.get_flippable(idx, 2): self.board[f] = 2
                         self.process_end(2)
-        elif self.state in ["WIN", "LOSE"]:
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                self.reset_game(); js.showTitle()
+        
+        # 結果表示後にクリックでタイトルへ
+        elif self.state == "RESULT" and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            self.reset_game(); js.showTitle()
 
     def process_end(self, color):
         if 0 not in self.board:
             p1, p2 = self.board.count(1), self.board.count(2)
-            self.state = "WIN" if p1 > p2 else "LOSE"
-            js.showWin() if self.state == "WIN" else js.showLose()
+            self.state = "WIN_IMG" if p1 > p2 else "LOSE_IMG"
+            self.timer = 0
+            js.showWin() if self.state == "WIN_IMG" else js.showLose()
         else: self.turn = 3 - color; self.ai_delay = 0
 
     def draw(self):
         pyxel.cls(0)
-        if self.state == "TITLE":
-            pyxel.text(45, 20, "ATTACK 3MOKU", 7)
-            pyxel.text(60, 50, "LV1", 11); pyxel.text(60, 70, "LV2", 10); pyxel.text(60, 90, "LV3", 8)
-        elif self.state == "PLAYING":
-            pyxel.text(5, 5, f"P1:{self.board.count(1)} AI:{self.board.count(2)}", 7)
+        if self.state == "PLAYING":
             for i in range(25):
                 x, y = self.start_x + (i % 5) * 18, self.start_y + (i // 5) * 18
                 pyxel.rect(x, y, 16, 16, 13 if self.board[i]==0 else (11 if self.board[i]==1 else 8))
