@@ -13,25 +13,28 @@
         function hideAll() {
             document.getElementById("title").style.display="none";
             document.getElementById("menu").style.display="none";
-            document.getElementById("win").style.display="none";
-            document.getElementById("lose").style.display="none";
+            document.getElementById("result").style.display="none";
         }
-        function showTitle() {
+        function showTitle() { 
             document.getElementById("bg").style.backgroundImage = "url('./title.jpg')";
             hideAll(); document.getElementById("title").style.display="block"; document.getElementById("menu").style.display="block";
         }
         function showGame() { document.getElementById("bg").style.backgroundImage = "none"; hideAll(); }
-        function showWin() { document.getElementById("bg").style.backgroundImage = "url('./win.jpg')"; hideAll(); document.getElementById("win").style.display="block"; }
-        function showLose() { document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')"; hideAll(); document.getElementById("lose").style.display="block"; }
-        window.onload = showTitle;
+        function showWin() { document.getElementById("bg").style.backgroundImage = "url('./win.jpg')"; hideAll(); }
+        function showLose() { document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')"; hideAll(); }
+        function showResult(text) { 
+            let res = document.getElementById("result");
+            res.innerText = text;
+            res.style.color = (text=="WIN!") ? "yellow" : "red";
+            res.style.display = "block";
+        }
     </script>
 </head>
 <body>
     <div id="bg"></div>
     <div id="title" class="ui" style="top:10%; font-size:64px;">ATTACK 3MOKU</div>
     <div id="menu" class="ui" style="top:35%; font-size:48px;">LV1<br>LV2<br>LV3</div>
-    <div id="win" class="ui" style="top:15%; font-size:80px; color:yellow;">WIN!</div>
-    <div id="lose" class="ui" style="top:15%; font-size:80px; color:red;">LOSE!</div>
+    <div id="result" class="ui" style="top:35%; font-size:80px;"></div>
     <pyxel-run name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 </body>
 </html>
