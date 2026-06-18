@@ -3,77 +3,45 @@
 <head>
     <meta charset="utf-8">
     <title>ATTACK 3MOKU</title>
-
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-
     <style>
-        html, body {
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: black;
-            font-family: sans-serif;
-        }
-
-        /* 背景レイヤー */
+        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
         #bg {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            height: 100vh;
-            background-size: cover;
-            background-position: center;
-            z-index: 1; /* canvasより手前にならないよう調整 */
-            
-            /* 【重要】画像を表示しつつ、クリック判定を下の層に透過させる */
-            pointer-events: none; 
-            
-            transition: background-image 0.3s ease;
+            position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+            background-size: cover; background-position: center;
+            z-index: 1; transition: background-image 0.3s ease;
         }
-
-        /* Pyxel画面 */
+        .overlay-text {
+            position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 5; font-family: sans-serif; font-size: 50px; color: white;
+            text-shadow: 3px 3px 8px black; pointer-events: none; display: none;
+            text-align: center; width: 100%;
+        }
         canvas {
-            position: fixed !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            display: block !important;
-            z-index: 10 !important;
+            position: fixed !important; left: 50% !important; top: 50% !important;
+            transform: translate(-50%, -50%) !important; z-index: 2 !important;
             image-rendering: pixelated;
         }
     </style>
-
     <script>
-        function showTitle() {
-            document.getElementById("bg").style.backgroundImage = "url('./title.jpg')";
+        function toggleUI(bg, title, win, lose) {
+            document.getElementById("bg").style.backgroundImage = bg;
+            document.getElementById("text-title").style.display = title;
+            document.getElementById("text-win").style.display = win;
+            document.getElementById("text-lose").style.display = lose;
         }
-
-        function showGame() {
-            // ゲーム中は画像を非表示にしてPyxelの盤面を見せる
-            document.getElementById("bg").style.backgroundImage = "none";
-        }
-
-        function showWin() {
-            document.getElementById("bg").style.backgroundImage = "url('./win.jpg')";
-        }
-
-        function showLose() {
-            document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')";
-        }
-
-        window.onload = function() {
-            showTitle();
-        }
+        function showTitle() { toggleUI("url('./title.jpg')", "block", "none", "none"); }
+        function showGame() { toggleUI("none", "none", "none", "none"); }
+        function showWin() { toggleUI("url('./win.jpg')", "none", "block", "none"); }
+        function showLose() { toggleUI("url('./lose.jpg')", "none", "none", "block"); }
+        window.onload = showTitle;
     </script>
 </head>
-
 <body>
-
     <div id="bg"></div>
-
+    <div id="text-title" class="overlay-text">ATTACK 3MOKU</div>
+    <div id="text-win" class="overlay-text" style="color: yellow;">YOU WIN!</div>
+    <div id="text-lose" class="overlay-text" style="color: red;">GAME OVER</div>
     <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
-
 </body>
 </html>
