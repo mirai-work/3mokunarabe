@@ -28,47 +28,6 @@ html,body{
     z-index:1;
 }
 
-/* タイトル */
-#title_text{
-    position:fixed;
-    top:15%;
-    width:100%;
-    text-align:center;
-    font-size:64px;
-    color:white;
-    text-shadow:4px 4px 8px black;
-    z-index:5;
-    display:none;
-}
-
-/* 勝利 */
-#win_text{
-    position:fixed;
-    top:15%;
-    width:100%;
-    text-align:center;
-    font-size:80px;
-    font-weight:bold;
-    color:yellow;
-    text-shadow:5px 5px 10px black;
-    z-index:5;
-    display:none;
-}
-
-/* 敗北 */
-#lose_text{
-    position:fixed;
-    top:15%;
-    width:100%;
-    text-align:center;
-    font-size:80px;
-    font-weight:bold;
-    color:red;
-    text-shadow:5px 5px 10px black;
-    z-index:5;
-    display:none;
-}
-
 canvas{
     position:fixed !important;
     left:50% !important;
@@ -78,15 +37,67 @@ canvas{
     image-rendering:pixelated;
 }
 
+.ui{
+    position:fixed;
+    width:100%;
+    text-align:center;
+    z-index:5;
+    color:white;
+    text-shadow:4px 4px 8px black;
+    font-family:sans-serif;
+}
+
+#title{
+    top:10%;
+    font-size:64px;
+}
+
+#menu{
+    top:40%;
+    font-size:48px;
+}
+
+.menuitem{
+    margin:20px;
+    cursor:pointer;
+}
+
+#win{
+    top:15%;
+    font-size:80px;
+    color:yellow;
+    display:none;
+}
+
+#lose{
+    top:15%;
+    font-size:80px;
+    color:red;
+    display:none;
+}
+
 </style>
 
 <script>
 
-function hideAllText(){
+let selectedLevel = 0;
 
-    document.getElementById("title_text").style.display="none";
-    document.getElementById("win_text").style.display="none";
-    document.getElementById("lose_text").style.display="none";
+function hideAll(){
+    document.getElementById("title").style.display="none";
+    document.getElementById("menu").style.display="none";
+    document.getElementById("win").style.display="none";
+    document.getElementById("lose").style.display="none";
+}
+
+function selectLevel(level){
+
+    selectedLevel = level;
+
+    if(window.pyodide){
+        try{
+            pyodide.globals.set("HTML_LEVEL",level);
+        }catch(e){}
+    }
 
 }
 
@@ -95,16 +106,17 @@ function showTitle(){
     document.getElementById("bg").style.backgroundImage =
         "url('./title.jpg')";
 
-    hideAllText();
+    hideAll();
 
-    document.getElementById("title_text").style.display="block";
+    document.getElementById("title").style.display="block";
+    document.getElementById("menu").style.display="block";
 }
 
 function showGame(){
 
     document.getElementById("bg").style.backgroundImage = "none";
 
-    hideAllText();
+    hideAll();
 
 }
 
@@ -113,9 +125,9 @@ function showWin(){
     document.getElementById("bg").style.backgroundImage =
         "url('./win.jpg')";
 
-    hideAllText();
+    hideAll();
 
-    document.getElementById("win_text").style.display="block";
+    document.getElementById("win").style.display="block";
 }
 
 function showLose(){
@@ -123,16 +135,14 @@ function showLose(){
     document.getElementById("bg").style.backgroundImage =
         "url('./lose.jpg')";
 
-    hideAllText();
+    hideAll();
 
-    document.getElementById("lose_text").style.display="block";
+    document.getElementById("lose").style.display="block";
 }
 
-window.onload = function(){
-
+window.onload=function(){
     showTitle();
-
-};
+}
 
 </script>
 
@@ -142,15 +152,23 @@ window.onload = function(){
 
 <div id="bg"></div>
 
-<div id="title_text">
+<div id="title" class="ui">
 ATTACK 3MOKU
 </div>
 
-<div id="win_text">
+<div id="menu" class="ui">
+
+<div class="menuitem">LV1</div>
+<div class="menuitem">LV2</div>
+<div class="menuitem">LV3</div>
+
+</div>
+
+<div id="win" class="ui">
 WIN!
 </div>
 
-<div id="lose_text">
+<div id="lose" class="ui">
 LOSE!
 </div>
 
