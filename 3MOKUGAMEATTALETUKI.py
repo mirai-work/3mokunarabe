@@ -5,7 +5,6 @@ import random
 try:
     import js
 except ImportError:
-    # ローカルのPython環境で実行したときにエラーにならないためのダミー
     class DummyJS:
         def showTitle(self): pass
         def showGame(self): pass
@@ -13,166 +12,307 @@ except ImportError:
         def showLose(self): pass
     js = DummyJS()
 
-class Attack3Moku:
+class Attack25Game:
     def __init__(self):
-        # 画面サイズ 160x120 で初期化
-        pyxel.init(160, 120, title="ATTACK 3MOKU")
-        
-        # マウスカーソルを表示
+        pyxel.init(160, 120, title="PANEL ATTACK 25")
         pyxel.mouse(True)
         
-        # ゲーム状態の定義: "TITLE", "PLAYING", "WIN", "LOSE"
         self.state = "TITLE"
+        self.level = 1
         
-        # 盤面の初期化 (0: 空白, 1: プレイヤー 'O', 2: AI 'X')
-        self.board = [0] * 9
-        self.turn = 1          # 1: プレイヤーの番, 2: AIの番
-        self.ai_delay = 0      # AIが考えている風の演出用タイマー
+        # 25マスの盤面 (横5×縦5)
+        # 0: 空白, 1: プレイヤー(緑), 2: AI(赤)
+        self.board = [0] * 25
+        self.turn = 1          
+        self.ai_delay = 0      
         
-        # 盤面の描画位置計算（中央に配置）
-        self.cell_size = 24
-        self.start_x = (160 - (self.cell_size * 3)) // 2
-        self.start_y = (120 - (self.cell_size * 3)) // 2 + 8
+        # アタックチャンス管理
+        self.attack_chance_used = False
         
-        # 最初にタイトル背景を呼ぶ
+        # エフェクト管理用
+        self.flip_effects = []
+        self.effect_timer = 0
+        
+        # パネル配置計算 (5x5)
+        self.p_width = 16
+        self.p_height = 16
+        self.p_gap = 2
+        total_w = 5 * (self.p_width + self.p_gap) - self.p_gap
+        total_h = 5 * (self.p_height + self.p_gap) - self.p_gap
+        self.start_x = (160 - total_w) // 2
+        self.start_y = (120 - total_h) // 2 + 6
+        
         js.showTitle()
-        
-        # Pyxelのメインループ開始
         pyxel.run(self.update, self.draw)
 
     def reset_game(self):
-        """ゲーム変数の初期化"""
-        self.board = [0] * 9
+        self.board = [0] * 25
         self.turn = 1
         self.ai_delay = 0
+        self.attack_chance_used = False
+        self.flip_effects = []
+        self.effect_timer = 0
+        self.state = "PLAYING"
+
+    def get_flippable_cells(self, idx, color):
+        """指定マスに置いた時にひっくり返せるマスのリストを取得"""
+        flippable = []
+        row, col = idx // 5, idx % 5
+        opp_color = 3 - color 
+        
+        dirs = [(-1,-1), (-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0), (1,1)]
+        for dr, dc in dirs:
+            r, c = row + dr, col + dc
+            temp = []
+            while 0 <= r < 5 and 0 <= c < 5 and self.board[r * 5 + c] == opp_color:
+                temp.append(r * 5 + c)
+                r += dr
+                c += dc
+            if 0 <= r < 5 and 0 <= c < 5 and self.board[r * 5 + c] == color:
+                flippable.extend(temp)
+                
+        return flippable
+
+    def get_valid_moves(self, color):
+        """【アタック25ルール】優先順位に基づいた配置可能マスの取得"""
+        sandwich_moves = []
+        adjacent_moves = []
+        empty_moves = []
+        
+        for i in range(25):
+            if self.board[i] != 0:
+                continue
+                
+            empty_moves.append(i)
+            
+            # ① はさめる場所
+            flips = self.get_flippable_cells(i, color)
+            if flips:
+                sandwich_moves.append(i)
+            else:
+                # ② 自分のパネルに隣接する場所
+                row, col = i // 5, i % 5
+                is_adj = False
+                for dr in [-1, 0, 1]:
+                    for dc in [-1, 0, 1]:
+                        if dr == 0 and dc == 0: continue
+                        nr, nc = row + dr, col + dc
+                        if 0 <= nr < 5 and 0 <= nc < 5:
+                            if self.board[nr * 5 + nc] == color:
+                                is_adj = True
+                if is_adj:
+                    adjacent_moves.append(i)
+                    
+        # 優先順位に従って返す
+        if sandwich_moves:
+            return sandwich_moves
+        if adjacent_moves:
+            return adjacent_moves
+        return empty_moves
 
     def check_winner(self):
-        """勝利判定 (1: プレイヤー勝利, 2: AI勝利, -1: 引き分け, 0: 継続)"""
-        win_patterns = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], # 横
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], # 縦
-            [0, 4, 8], [2, 4, 6]             # 斜め
-        ]
-        
-        for p in win_patterns:
-            if self.board[p[0]] == self.board[p[1]] == self.board[p[2]] != 0:
-                return self.board[p[0]]
-                
+        """盤面が埋まったら、枚数で勝敗を判定"""
         if 0 not in self.board:
-            return -1 # 引き分け
+            p1_count = self.board.count(1)
+            p2_count = self.board.count(2)
+            if p1_count > p2_count: return 1
+            elif p2_count > p1_count: return 2
+            else: return -1 # 引き分け
+        return 0 # ゲーム継続
+
+    def get_ai_move(self):
+        valid_moves = self.get_valid_moves(2)
+        if not valid_moves: return None
+
+        if self.level == 1:
+            return random.choice(valid_moves)
+
+        # レベル2 & 3: 獲得枚数を最大化する手を優先
+        best_move = None
+        max_flips = -1
+
+        for idx in valid_moves:
+            flips = self.get_flippable_cells(idx, 2)
+            if len(flips) > max_flips:
+                max_flips = len(flips)
+                best_move = idx
+
+        # レベル2はたまにランダムにミスをする
+        if self.level == 2 and random.random() < 0.3:
+            return random.choice(valid_moves)
+
+        return best_move if best_move is not None else random.choice(valid_moves)
+
+    def get_ai_attack_chance_target(self):
+        """アタックチャンス時のAIの標的選択"""
+        opp_panels = [i for i, v in enumerate(self.board) if v == 1]
+        return random.choice(opp_panels) if opp_panels else None
+
+    def make_move(self, idx, color):
+        """パネルを配置し、ひっくり返す"""
+        flips = self.get_flippable_cells(idx, color)
+        self.board[idx] = color
+        for f in flips:
+            self.board[f] = color
             
-        return 0 # 継続
+        if flips:
+            self.flip_effects = flips[:]
+            self.effect_timer = 10 
+            
+        self.process_turn_end(color)
+
+    def process_turn_end(self, current_player):
+        # アタックチャンス発動判定（残り5マスになった瞬間）
+        if self.board.count(0) == 5 and not self.attack_chance_used:
+            # 相手のパネルが1枚でもあれば発動
+            opp_color = 3 - current_player
+            if opp_color in self.board:
+                self.state = "ATTACK_CHANCE"
+                self.attack_chance_used = True
+                self.ai_delay = 0
+                return # ターンは変えずにアタックチャンス状態へ移行
+
+        result = self.check_winner()
+        if result == 1:
+            self.state = "WIN"; js.showWin()
+        elif result == 2 or result == -1:
+            self.state = "LOSE"; js.showLose()
+        else:
+            self.turn = 3 - current_player
+            self.ai_delay = 0
+
+    def start_playing(self):
+        self.reset_game()
+        js.showGame()
 
     def update(self):
-        # --- タイトル画面の処理 ---
-        if self.state == "TITLE":
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.KEY_SPACE):
-                self.reset_game()
-                self.state = "PLAYING"
-                js.showGame() # JS側：背景を消去
+        mx, my = pyxel.mouse_x, pyxel.mouse_y
 
-        # --- ゲームメインの処理 ---
+        if self.effect_timer > 0:
+            self.effect_timer -= 1
+            if self.effect_timer == 0:
+                self.flip_effects = []
+            return
+
+        if self.state == "TITLE":
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                if 20 <= mx <= 50 and 85 <= my <= 100: self.level = 1; self.start_playing()
+                elif 65 <= mx <= 95 and 85 <= my <= 100: self.level = 2; self.start_playing()
+                elif 110 <= mx <= 140 and 85 <= my <= 100: self.level = 3; self.start_playing()
+
         elif self.state == "PLAYING":
-            # プレイヤーのターン
             if self.turn == 1:
                 if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                    mx, my = pyxel.mouse_x, pyxel.mouse_y
-                    # クリックされた座標が盤面内か判定
-                    if (self.start_x <= mx < self.start_x + self.cell_size * 3 and
-                        self.start_y <= my < self.start_y + self.cell_size * 3):
-                        
-                        col = (mx - self.start_x) // self.cell_size
-                        row = (my - self.start_y) // self.cell_size
-                        idx = row * 3 + col
-                        
-                        # 空いているマスなら配置
-                        if self.board[idx] == 0:
-                            self.board[idx] = 1
-                            result = self.check_winner()
-                            
-                            if result == 1:
-                                self.state = "WIN"
-                                js.showWin() # JS側：勝利背景
-                            elif result == -1:
-                                self.state = "LOSE"
-                                js.showLose() # JS側：敗北（引き分け）背景
-                            else:
-                                self.turn = 2 # AIのターンへ
-                                self.ai_delay = 0
+                    col = (mx - self.start_x) // (self.p_width + self.p_gap)
+                    row = (my - self.start_y) // (self.p_height + self.p_gap)
+                    if 0 <= col < 5 and 0 <= row < 5:
+                        idx = row * 5 + col
+                        if idx in self.get_valid_moves(1):
+                            self.make_move(idx, 1)
 
-            # AIのターン (少し時間を置いてから自動で置く)
             elif self.turn == 2:
                 self.ai_delay += 1
-                if self.ai_delay > 15: # 約0.5秒のウェイト
-                    empty_cells = [i for i, val in enumerate(self.board) if val == 0]
-                    if empty_cells:
-                        idx = random.choice(empty_cells)
-                        self.board[idx] = 2
-                        result = self.check_winner()
-                        
-                        if result == 2:
-                            self.state = "LOSE"
-                            js.showLose() # JS側：敗北背景
-                        elif result == -1:
-                            self.state = "LOSE"
-                            js.showLose()
-                        else:
-                            self.turn = 1 # プレイヤーのターンへ
+                if self.ai_delay > 20:
+                    idx = self.get_ai_move()
+                    if idx is not None:
+                        self.make_move(idx, 2)
 
-        # --- 結果画面の処理（勝敗画面） ---
+        elif self.state == "ATTACK_CHANCE":
+            # アタックチャンス処理（相手のパネルを自分の色に塗り替える）
+            opp_color = 3 - self.turn
+            
+            if self.turn == 1: # プレイヤーの選択
+                if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                    col = (mx - self.start_x) // (self.p_width + self.p_gap)
+                    row = (my - self.start_y) // (self.p_height + self.p_gap)
+                    if 0 <= col < 5 and 0 <= row < 5:
+                        idx = row * 5 + col
+                        if self.board[idx] == opp_color:
+                            self.board[idx] = 1 # 自分の色に！
+                            self.flip_effects = [idx]
+                            self.effect_timer = 10
+                            self.state = "PLAYING" # 引き続き自分のターン
+
+            elif self.turn == 2: # AIの選択
+                self.ai_delay += 1
+                if self.ai_delay > 30:
+                    idx = self.get_ai_attack_chance_target()
+                    if idx is not None:
+                        self.board[idx] = 2
+                        self.flip_effects = [idx]
+                        self.effect_timer = 10
+                    self.state = "PLAYING"
+
         elif self.state in ["WIN", "LOSE"]:
             if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.KEY_SPACE):
                 self.state = "TITLE"
-                js.showTitle() # JS側：タイトル背景に戻す
+                js.showTitle()
 
     def draw(self):
-        # 画面を透明（背景画像を透過させるため、pyxel側はクリアカラーを0にしつつ
-        # HTML/CSS側の背景が見えるように設定。ただしPyxel Wasmの標準仕様に合わせて黒ベースで消去）
         pyxel.cls(0)
 
         if self.state == "TITLE":
-            # タイトル文字（中央揃えの簡易配置）
-            pyxel.text(56, 40, "ATTACK 3MOKU", 10)
-            pyxel.text(42, 70, "CLICK OR SPACE TO START", 7)
+            pyxel.text(48, 70, "SELECT DIFFICULTY", 7)
+            pyxel.rect(20, 85, 30, 15, 5); pyxel.text(28, 90, "LV 1", 7)
+            pyxel.rect(65, 85, 30, 15, 6); pyxel.text(73, 90, "LV 2", 7)
+            pyxel.rect(110, 85, 30, 15, 8); pyxel.text(118, 90, "LV 3", 7)
 
-        elif self.state == "PLAYING":
-            # 盤面の枠線を描画
-            for i in range(4):
-                # 横線
-                pyxel.line(self.start_x, self.start_y + i * self.cell_size, 
-                           self.start_x + self.cell_size * 3, self.start_y + i * self.cell_size, 13)
-                # 縦線
-                pyxel.line(self.start_x + i * self.cell_size, self.start_y, 
-                           self.start_x + i * self.cell_size, self.start_y + self.cell_size * 3, 13)
+        elif self.state in ["PLAYING", "ATTACK_CHANCE"]:
+            pyxel.text(6, 6, f"LV {self.level}", 7)
+            
+            # スコア（枚数）表示
+            p1_c = self.board.count(1)
+            p2_c = self.board.count(2)
+            pyxel.text(6, 16, f"P1: {p1_c}", 11)
+            pyxel.text(6, 26, f"AI: {p2_c}", 8)
 
-            # 駒の描画
-            for i in range(9):
-                row = i // 3
-                col = i % 3
-                cx = self.start_x + col * self.cell_size + self.cell_size // 2
-                cy = self.start_y + row * self.cell_size + self.cell_size // 2
-                
-                if self.board[i] == 1:
-                    # プレイヤー：青い○
-                    pyxel.circb(cx, cy, 8, 12)
-                elif self.board[i] == 2:
-                    # AI：赤い×
-                    pyxel.line(cx - 6, cy - 6, cx + 6, cy + 6, 8)
-                    pyxel.line(cx + 6, cy - 6, cx - 6, cy + 6, 8)
-
-            # ターン表示
-            if self.turn == 1:
-                pyxel.text(60, 6, "YOUR TURN", 12)
+            if self.state == "ATTACK_CHANCE":
+                if self.effect_timer % 4 < 2: # 点滅
+                    pyxel.text(90, 6, "ATTACK CHANCE!", 10)
+                msg = "STEAL AI PANEL!" if self.turn == 1 else "AI STEALING..."
+                pyxel.text(90, 16, msg, 7)
             else:
-                pyxel.text(62, 6, "AI THINKING", 8)
+                if self.turn == 1: pyxel.text(114, 6, "YOUR TURN", 11)
+                else: pyxel.text(114, 6, "AI THINKING", 8)
 
-        elif self.state == "WIN":
-            pyxel.text(68, 50, "YOU WIN!", 10)
-            pyxel.text(46, 75, "CLICK TO RESTART", 7)
+            valid_moves = self.get_valid_moves(1) if self.turn == 1 else []
 
-        elif self.state == "LOSE":
-            pyxel.text(68, 50, "GAME OVER", 8)
-            pyxel.text(46, 75, "CLICK TO RESTART", 7)
+            # 25マスのパネル描画
+            for i in range(25):
+                row = i // 5
+                col = i % 5
+                px = self.start_x + col * (self.p_width + self.p_gap)
+                py = self.start_y + row * (self.p_height + self.p_gap)
+                
+                # アタックチャンス中は相手のパネルをハイライト
+                is_ac_target = (self.state == "ATTACK_CHANCE" and self.turn == 1 and self.board[i] == 2)
+                selectable = (i in valid_moves and self.state == "PLAYING") or is_ac_target
+                
+                if self.board[i] == 0:
+                    pyxel.rect(px, py, self.p_width, self.p_height, 13)
+                    border_color = 7 if selectable else 5
+                    pyxel.rectb(px, py, self.p_width, self.p_height, border_color)
+                elif self.board[i] == 1:
+                    pyxel.rect(px, py, self.p_width, self.p_height, 11)
+                    pyxel.rectb(px, py, self.p_width, self.p_height, 7)
+                elif self.board[i] == 2:
+                    pyxel.rect(px, py, self.p_width, self.p_height, 8)
+                    border_color = 10 if is_ac_target else 7
+                    pyxel.rectb(px, py, self.p_width, self.p_height, border_color)
 
-# 実行
-Attack3Moku()
+            if self.effect_timer > 0 and self.effect_timer % 2 == 0:
+                for f in self.flip_effects:
+                    frow = f // 5
+                    fcol = f % 5
+                    fpx = self.start_x + fcol * (self.p_width + self.p_gap)
+                    fpy = self.start_y + frow * (self.p_height + self.p_gap)
+                    pyxel.rect(fpx, fpy, self.p_width, self.p_height, 7)
+
+        elif self.state in ["WIN", "LOSE"]:
+            result_text = "YOU WIN!" if self.state == "WIN" else ("DRAW!" if self.board.count(1) == self.board.count(2) else "YOU LOSE...")
+            color = 11 if self.state == "WIN" else (7 if result_text == "DRAW!" else 8)
+            pyxel.text(60, 50, result_text, color)
+            pyxel.text(42, 105, "CLICK TO RETURN TITLE", 7)
+
+# ゲーム起動
+Attack25Game()
