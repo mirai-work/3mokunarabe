@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<title>ATTACK 3MOKU</title>
-
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-
 <style>
-
 html,body{
     margin:0;
     width:100%;
@@ -20,12 +11,12 @@ html,body{
     position:fixed;
     left:0;
     top:0;
-    width:100%;
-    height:100%;
+    width:100vw;
+    height:100vh;
     background-size:cover;
-    background-position:center center;
+    background-position:center;
     background-repeat:no-repeat;
-    z-index:0;
+    z-index:-1;
 }
 
 canvas{
@@ -35,24 +26,22 @@ canvas{
     transform:translate(-50%,-50%);
     z-index:1;
 }
-
 </style>
 
 <script>
-
 function showTitleBG(){
     document.getElementById("bg").style.backgroundImage =
-    "url('title.jpg')";
+    "url('./title.jpg')";
 }
 
 function showWinBG(){
     document.getElementById("bg").style.backgroundImage =
-    "url('win.jpg')";
+    "url('./win.jpg')";
 }
 
 function showLoseBG(){
     document.getElementById("bg").style.backgroundImage =
-    "url('lose.jpg')";
+    "url('./lose.jpg')";
 }
 
 function clearBG(){
@@ -62,19 +51,4 @@ function clearBG(){
 window.onload = function(){
     showTitleBG();
 }
-
 </script>
-
-</head>
-
-<body>
-
-<div id="bg"></div>
-
-<pyxel-run
-root="."
-name="3MOKUGAMEATTALETUKI.py">
-</pyxel-run>
-
-</body>
-</html>
