@@ -1,73 +1,76 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<title>ATTACK 3MOKU</title>
+    <meta charset="utf-8">
+    <title>ATTACK 3MOKU</title>
 
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
-<style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:black;
-}
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: black;
+            font-family: sans-serif;
+        }
 
-/* 背景 */
-#bg{
-    position:fixed;
-    left:0;
-    top:0;
-    width:100vw;
-    height:100vh;
-    background-size:cover;
-    background-position:center;
-    z-index:-1;
-}
+        /* 背景画像を画面いっぱいに表示する設定 */
+        #bg {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+            transition: background-image 0.3s ease; /* 背景切り替えを滑らかにする演出 */
+        }
 
-/* Pyxel画面 */
-canvas{
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
+        /* Pyxelのゲーム画面（中央配置 & ドット絵をクッキリ表示） */
+        canvas {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); /* ゲーム画面の輪郭を際立たせる影 */
+            image-rendering: pixelated;
+        }
+    </style>
 
-    /* ★これが重要 */
-    image-rendering: pixelated;
-}
-</style>
+    <script>
+        // Python（Pyxel）側から呼び出される背景切り替え関数群
+        function showTitle() {
+            document.getElementById("bg").style.backgroundImage = "url('./title.jpg')";
+        }
 
-<script>
-function showTitle(){
-    document.getElementById("bg").style.backgroundImage = "url('./title.jpg')";
-}
+        function showGame() {
+            document.getElementById("bg").style.backgroundImage = "none";
+        }
 
-function showGame(){
-    document.getElementById("bg").style.backgroundImage = "none";
-}
+        function showWin() {
+            document.getElementById("bg").style.backgroundImage = "url('./win.jpg')";
+        }
 
-function showWin(){
-    document.getElementById("bg").style.backgroundImage = "url('./win.jpg')";
-}
+        function showLose() {
+            document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')";
+        }
 
-function showLose(){
-    document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')";
-}
-
-window.onload = function(){
-    showTitle();
-}
-</script>
+        // ページ読み込み時に初期状態としてタイトル背景を設定
+        window.onload = function() {
+            showTitle();
+        }
+    </script>
 </head>
 
 <body>
 
-<div id="bg"></div>
+    <div id="bg"></div>
 
-<pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
+    <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 
 </body>
 </html>
