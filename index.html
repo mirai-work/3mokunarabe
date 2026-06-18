@@ -16,7 +16,7 @@
             font-family: sans-serif;
         }
 
-        /* 背景 */
+        /* 背景レイヤー */
         #bg {
             position: fixed;
             left: 0;
@@ -25,22 +25,22 @@
             height: 100vh;
             background-size: cover;
             background-position: center;
-            z-index: -1;
+            z-index: 1; /* canvasより手前にならないよう調整 */
+            
+            /* 【重要】画像を表示しつつ、クリック判定を下の層に透過させる */
+            pointer-events: none; 
+            
             transition: background-image 0.3s ease;
         }
 
-        /* Pyxel画面（!important を追加して中央配置を強制固定） */
+        /* Pyxel画面 */
         canvas {
             position: fixed !important;
             left: 50% !important;
             top: 50% !important;
             transform: translate(-50%, -50%) !important;
             display: block !important;
-            
-            /* 背景画像より必ず手前に表示させる */
             z-index: 10 !important;
-
-            /* ドット絵をクッキリ表示 */
             image-rendering: pixelated;
         }
     </style>
@@ -51,6 +51,7 @@
         }
 
         function showGame() {
+            // ゲーム中は画像を非表示にしてPyxelの盤面を見せる
             document.getElementById("bg").style.backgroundImage = "none";
         }
 
