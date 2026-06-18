@@ -2,7 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>画面切り替え</title>
+<title>画面切り替え＋Pyxel連動</title>
+
+<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
 <style>
 body {
@@ -10,7 +12,9 @@ body {
     overflow: hidden;
 }
 
+/* 画面共通 */
 .screen {
+    position: fixed;
     width: 100vw;
     height: 100vh;
     display: none;
@@ -20,40 +24,72 @@ body {
     line-height: 100vh;
 }
 
+/* 各画面 */
 #title { background: black; display: block; }
 #game  { background: green; }
 #win   { background: blue; }
 #lose  { background: red; }
+
+canvas {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
 </style>
 
 <script>
+
+// =========================
+// 画面切り替え（共通関数）
+// =========================
 function showScreen(id){
     document.querySelectorAll(".screen").forEach(s=>{
         s.style.display = "none";
     });
     document.getElementById(id).style.display = "block";
 }
+
+// =========================
+// Pyxelから呼ばれる関数
+// =========================
+function showTitle(){
+    showScreen("title");
+}
+
+function showGame(){
+    showScreen("game");
+}
+
+function showWin(){
+    showScreen("win");
+}
+
+function showLose(){
+    showScreen("lose");
+}
+
+// =========================
+// 最初はタイトル
+// =========================
+window.onload = function(){
+    showTitle();
+}
+
 </script>
 
 </head>
 
 <body>
 
-<div id="title" class="screen" onclick="showScreen('game')">
-TITLE（クリックで開始）
-</div>
+<!-- 画面 -->
+<div id="title" class="screen">TITLE</div>
+<div id="game" class="screen">GAME</div>
+<div id="win" class="screen">WIN</div>
+<div id="lose" class="screen">LOSE</div>
 
-<div id="game" class="screen" onclick="showScreen('win')">
-GAME（クリックで勝利）
-</div>
-
-<div id="win" class="screen" onclick="showScreen('lose')">
-WIN（クリックで敗北）
-</div>
-
-<div id="lose" class="screen" onclick="showScreen('title')">
-LOSE（クリックでタイトル）
-</div>
+<!-- Pyxel -->
+<pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 
 </body>
 </html>
