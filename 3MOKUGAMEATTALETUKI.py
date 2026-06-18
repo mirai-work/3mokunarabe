@@ -37,8 +37,9 @@ class Othello25:
         self.grids[1][2] = 1; self.grids[2][1] = 1
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
+        self.difficulty = 2 # デフォルト
         self.scene = "TITLE_START"
-        self.transition_timer = 150
+        self.transition_timer = 90 # 3秒 (30fps * 3)
         pyxel.stop()
         if js:
             try: js.showTitleBG()
@@ -115,7 +116,7 @@ class Othello25:
         cpu = sum(row.count(2) for row in self.grids)
         self.status = 1 if p1 > cpu else (2 if cpu > p1 else 3)
         self.scene = "RESULT_START"
-        self.transition_timer = 150
+        self.transition_timer = 90 # 3秒
         if js:
             try:
                 if self.status == 1: js.showWinBG()
@@ -139,7 +140,9 @@ class Othello25:
             if self.transition_timer <= 0: self.reset_game()
             return
         if self.scene == "TITLE":
-            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3) or pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            # キー選択対応
+            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
+                self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
                 self.scene = "GAME"
                 if js:
                     try: js.clearBG()
@@ -176,6 +179,7 @@ class Othello25:
         if self.scene in ["TITLE_START", "RESULT_START"]: return
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK 3MOKU", pyxel.frame_count % 16)
+            pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
             return
         for i in range(BOARD_SIZE + 1):
             pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
