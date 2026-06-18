@@ -122,8 +122,8 @@ class Othello25:
                 if self.status == 1: js.showWinBG()
                 elif self.status == 2: js.showLoseBG()
             except: pass
-        pyxel.stop()
         pyxel.play(3, 2 if self.status == 1 else 3)
+        
 
     def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
@@ -174,7 +174,7 @@ class Othello25:
 
     def draw(self):
         pyxel.cls(0)
-        if self.scene in ["TITLE_START", "RESULT_START"]: return
+        if self.scene == "TITLE_START": return
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK 3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
@@ -187,6 +187,7 @@ class Othello25:
                     if self.grids[y][x]:
                         u, v = CHARACTER_LIST[self.grids[y][x] - 1]
                         pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
+       　if self.scene != "RESULT_START":     
             pyxel.text(2, SCREEN_SIZE - 8, "YOU" if self.turn == 1 else "CPU", 7)
             if self.pass_timer > 0:
                 pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
