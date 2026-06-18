@@ -261,13 +261,34 @@ class Othello25:
                 self.reset_game(); self.scene = "TITLE"
 
     def draw(self):
+        
         pyxel.cls(0)
+
+        # ----------------
+        # タイトル
+        # ----------------
         if self.scene == "TITLE":
 
-            pyxel.cls(0)
+            pyxel.text(5, 5,
+                       "ATTACK 3MOKU",
+                       pyxel.frame_count % 16)
+    
+            pyxel.text(5, 18, "LV1", 11)
+            pyxel.text(5, 26, "LV2", 10)
+            pyxel.text(5, 34, "LV3", 8)
 
-            if self.scene == "TITLE":
-                return
+            pyxel.text(
+                5,
+                42,
+                "(KEY 1-3)",
+                7
+            )
+
+            return
+       # ----------------
+       # ゲーム画面
+       # ----------------
+       for i in range(BOARD_SIZE + 1): 
 
             # 盤面
             for i in range(BOARD_SIZE + 1):
