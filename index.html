@@ -1,48 +1,151 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="utf-8">
-    <title>ATTACK 3MOKU</title>
-    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-    <style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        #bg {
-            position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
-            background-size: cover; background-position: center;
-            z-index: 1; transition: background-image 0.3s ease;
-        }
-        /* HTML文字用レイヤー */
-        .ui-layer {
-            position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 5; font-family: sans-serif; font-size: 50px; color: white;
-            text-shadow: 3px 3px 8px black; pointer-events: none; display: none;
-            text-align: center; width: 100%;
-        }
-        canvas {
-            position: fixed !important; left: 50% !important; top: 50% !important;
-            transform: translate(-50%, -50%) !important; z-index: 2 !important;
-            image-rendering: pixelated;
-        }
-    </style>
-    <script>
-        function toggleUI(bg, title, win, lose) {
-            document.getElementById("bg").style.backgroundImage = bg;
-            document.getElementById("text-title").style.display = title;
-            document.getElementById("text-win").style.display = win;
-            document.getElementById("text-lose").style.display = lose;
-        }
-        function showTitle() { toggleUI("url('./title.jpg')", "block", "none", "none"); }
-        function showGame() { toggleUI("none", "none", "none", "none"); }
-        function showWin() { toggleUI("url('./win.jpg')", "none", "block", "none"); }
-        function showLose() { toggleUI("url('./lose.jpg')", "none", "none", "block"); }
-        window.onload = showTitle;
-    </script>
-</head>
-<body>
-    <div id="bg"></div>
-    <div id="text-title" class="ui-layer">ATTACK 3MOKU</div>
-    <div id="text-win" class="ui-layer" style="color: yellow;">YOU WIN!</div>
-    <div id="text-lose" class="ui-layer" style="color: red;">GAME OVER</div>
-    <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
-</body>
-</html>
+import pyxel
+import random
+
+try: import js
+except ImportError:
+    class DummyJS:
+        def showTitle(self): pass
+        def showGame(self): pass
+        def showWin(self): pass
+        def showLose(self): pass
+    js = DummyJS()
+
+class Attack25Game:
+    def __init__(self):
+        pyxel.init(160, 120, title="PANEL ATTACK 3MOKU")
+        pyxel.mouse(True)
+        self.state = "TITLE"
+        self.level = 1
+        self.board = [0] * 25
+        self.turn = 1
+        self.ai_delay = 0
+        self.attack_chance_used = False
+        self.flip_effects = []
+        self.effect_timer = 0
+        self.p_width, self.p_height, self.p_gap = 16, 16, 2
+        total_w = 5 * (self.p_width + self.p_gap) - self.p_gap
+        total_h = 5 * (self.p_height + self.p_gap) - self.p_gap
+        self.start_x = (160 - total_w) // 2
+        self.start_y = (120 - total_h) // 2 + 6
+        pyxel.run(self.update, self.draw)
+
+    def reset_game(self):
+        self.board = [0] * 25
+        self.turn = 1
+        self.ai_delay = 0
+        self.attack_chance_used = False
+        self.flip_effects = []
+        self.effect_timer = 0
+        self.state = "PLAYING"
+
+    def get_flippable_cells(self, idx, color):
+        flippable = []
+        row, col = idx // 5, idx % 5
+        opp_color = 3 - color
+        dirs = [(-1,-1), (-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0), (1,1)]
+        for dr, dc in dirs:
+            r, c = row + dr, col + dc
+            temp = []
+            while 0 <= r < 5 and 0 <= c < 5 and self.board[r * 5 + c] == opp_color:
+                temp.append(r * 5 + c)
+                r += dr
+                c += dc
+            if 0 <= r < 5 and 0 <= c < 5 and self.board[r * 5 + c] == color:
+                flippable.extend(temp)
+        return flippable
+
+    def get_valid_moves(self, color):
+        sandwich, adjacent, empty = [], [], []
+        for i in range(25):
+            if self.board[i] != 0: continue
+            empty.append(i)
+            flips = self.get_flippable_cells(i, color)
+            if flips: sandwich.append(i)
+            else:
+                row, col = i // 5, i % 5
+                for dr in [-1, 0, 1]:
+                    for dc in [-1, 0, 1]:
+                        if dr == 0 and dc == 0: continue
+                        nr, nc = row + dr, col + dc
+                        if 0 <= nr < 5 and 0 <= nc < 5 and self.board[nr * 5 + nc] == color:
+                            adjacent.append(i); break
+        if sandwich: return sandwich
+        if adjacent: return adjacent
+        return empty
+
+    def check_winner(self):
+        if 0 not in self.board:
+            p1, p2 = self.board.count(1), self.board.count(2)
+            return 1 if p1 > p2 else (2 if p2 > p1 else -1)
+        return 0
+
+    def get_ai_move(self):
+        valid = self.get_valid_moves(2)
+        if not valid: return None
+        best, max_f = None, -1
+        for idx in valid:
+            f = len(self.get_flippable_cells(idx, 2))
+            if f > max_f: max_f = f; best = idx
+        return best if best is not None else random.choice(valid)
+
+    def make_move(self, idx, color):
+        flips = self.get_flippable_cells(idx, color)
+        self.board[idx] = color
+        for f in flips: self.board[f] = color
+        if flips: self.flip_effects = flips; self.effect_timer = 10
+        self.process_turn_end(color)
+
+    def process_turn_end(self, color):
+        if self.board.count(0) == 5 and not self.attack_chance_used:
+            self.state = "ATTACK_CHANCE"; self.attack_chance_used = True; return
+        res = self.check_winner()
+        if res == 1: self.state = "WIN"; js.showWin()
+        elif res != 0: self.state = "LOSE"; js.showLose()
+        else: self.turn = 3 - color; self.ai_delay = 0
+
+    def update(self):
+        mx, my = pyxel.mouse_x, pyxel.mouse_y
+        if self.effect_timer > 0: self.effect_timer -= 1; return
+        if self.state == "TITLE":
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT): self.reset_game(); js.showGame()
+        elif self.state == "PLAYING":
+            if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                c, r = (mx - self.start_x)//18, (my - self.start_y)//18
+                if 0 <= c < 5 and 0 <= r < 5:
+                    idx = r * 5 + c
+                    if idx in self.get_valid_moves(1): self.make_move(idx, 1)
+            elif self.turn == 2:
+                self.ai_delay += 1
+                if self.ai_delay > 20:
+                    idx = self.get_ai_move()
+                    if idx is not None: self.make_move(idx, 2)
+        elif self.state == "ATTACK_CHANCE":
+            if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                c, r = (mx - self.start_x)//18, (my - self.start_y)//18
+                if 0 <= c < 5 and 0 <= r < 5:
+                    idx = r * 5 + c
+                    if self.board[idx] == 2: self.board[idx] = 1; self.state = "PLAYING"
+            elif self.turn == 2:
+                idx = random.choice([i for i, v in enumerate(self.board) if v == 1])
+                self.board[idx] = 2; self.state = "PLAYING"
+        elif self.state in ["WIN", "LOSE"]:
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT): self.state = "TITLE"; js.showTitle()
+
+    def draw(self):
+        if self.state not in ["PLAYING", "ATTACK_CHANCE"]: return
+        pyxel.cls(0)
+        # プレイ中のステータス表示
+        pyxel.text(5, 5, f"P1:{self.board.count(1)} AI:{self.board.count(2)}", 7)
+        if self.state == "ATTACK_CHANCE": pyxel.text(90, 5, "ATTACK CHANCE!", 10)
+        elif self.turn == 1: pyxel.text(110, 5, "YOUR TURN", 11)
+        else: pyxel.text(110, 5, "AI THINKING", 8)
+        
+        for i in range(25):
+            x, y = self.start_x + (i%5)*18, self.start_y + (i//5)*18
+            color = 13 if self.board[i]==0 else (11 if self.board[i]==1 else 8)
+            pyxel.rect(x, y, 16, 16, color)
+            pyxel.rectb(x, y, 16, 16, 7)
+        for f in self.flip_effects:
+            pyxel.rect(self.start_x + (f%5)*18, self.start_y + (f//5)*18, 16, 16, 7)
+
+Attack25Game()
