@@ -18,7 +18,6 @@ class Othello25:
         pyxel.load("KAIYOU.pyxres")
         self.init_sound()
         pyxel.mouse(True)
-        self.transition_timer = 0
         self.reset_game()
         pyxel.run(self.update, self.draw)
 
@@ -34,16 +33,10 @@ class Othello25:
 
     def reset_game(self):
         self.grids = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]
-        self.grids[1][1] = 2
-        self.grids[2][2] = 2
-        self.grids[1][2] = 1
-        self.grids[2][1] = 1
-        self.turn = 1
-        self.status = 0
-        self.wait_timer = 0
-        self.result_timer = 0
-        self.pass_timer = 0
-        self.attack_chance_available = True
+        self.grids[1][1] = 2; self.grids[2][2] = 2
+        self.grids[1][2] = 1; self.grids[2][1] = 1
+        self.turn = 1; self.status = 0; self.wait_timer = 0
+        self.pass_timer = 0; self.attack_chance_available = True
         self.scene = "TITLE_START"
         self.transition_timer = 150
         pyxel.stop()
@@ -74,9 +67,7 @@ class Othello25:
                     valid_moves.append((x, y, flips, score))
         if not valid_moves: self.change_turn(); return
         valid_moves.sort(key=lambda x: x[3], reverse=True)
-        if self.difficulty == 1: move = random.choice(valid_moves)
-        elif self.difficulty == 2: move = random.choice(valid_moves[:2])
-        else: move = valid_moves[0]
+        move = random.choice(valid_moves) if self.difficulty == 1 else (random.choice(valid_moves[:2]) if self.difficulty == 2 else valid_moves[0])
         bx, by, bflips, _ = move
         self.grids[by][bx] = 2
         for fx, fy in bflips: self.grids[fy][fx] = 2
@@ -129,7 +120,6 @@ class Othello25:
             try:
                 if self.status == 1: js.showWinBG()
                 elif self.status == 2: js.showLoseBG()
-                else: js.showTitleBG()
             except: pass
         pyxel.stop()
         pyxel.play(3, 2 if self.status == 1 else 3)
@@ -146,20 +136,10 @@ class Othello25:
             return
         elif self.scene == "RESULT_START":
             self.transition_timer -= 1
-            if self.transition_timer <= 0
-            　　　
-            　　　self.reset_game()
+            if self.transition_timer <= 0: self.reset_game()
             return
         if self.scene == "TITLE":
-            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
-                self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
-                self.scene = "GAME"
-                if js:
-                    try: js.clearBG()
-                    except: pass
-                pyxel.playm(0, loop=True)
-            elif pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) and pyxel.mouse_x < (SCREEN_SIZE // 3) * 2:
-                self.difficulty = 2
+            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3) or pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 self.scene = "GAME"
                 if js:
                     try: js.clearBG()
@@ -190,16 +170,12 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_attack()
-        elif self.scene == "RESULT":
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT): self.reset_game()
 
     def draw(self):
         pyxel.cls(0)
         if self.scene in ["TITLE_START", "RESULT_START"]: return
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK 3MOKU", pyxel.frame_count % 16)
-            pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
-            pyxel.text(2, 42, "KEY 1-3", 7)
             return
         for i in range(BOARD_SIZE + 1):
             pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
@@ -215,12 +191,6 @@ class Othello25:
         if self.scene == "ATTACK_CHANCE":
             c = 10 if pyxel.frame_count % 10 < 5 else 7
             pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
-            pyxel.text(2, 20, "ATTACK!" if self.turn == 1 else "CPU ATK!", 10 if self.turn == 1 else 8)
-        if self.scene == "RESULT":
-            pyxel.rect(2, 12, 42, 22, 0); pyxel.rectb(2, 12, 42, 22, 7)
-            p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
-            pyxel.text(5, 16, f"Y:{p1}", 7); pyxel.text(5, 22, f"C:{cpu}", 7)
-            res = "WIN!" if self.status == 1 else ("LOSE" if self.status == 2 else "DRAW")
-            pyxel.text(5, 28, res, 10 if self.status == 1 else (8 if self.status == 2 else 7))
+            pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
