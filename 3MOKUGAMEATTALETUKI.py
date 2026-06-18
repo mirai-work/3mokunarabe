@@ -127,8 +127,6 @@ class Othello25:
 
     def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
-        
-        # 演出状態の管理
         if self.scene == "TITLE_START" or self.scene == "RESULT_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0:
@@ -140,8 +138,6 @@ class Othello25:
                     try: js.clearBG()
                     except: pass
             return
-
-        # タイトル画面での操作待ち
         if self.scene == "TITLE":
             if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
                 self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
@@ -151,7 +147,6 @@ class Othello25:
                 self.difficulty = 2
                 self.scene = "GAME"
                 pyxel.playm(0, loop=True)
-
         elif self.scene == "GAME":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
@@ -179,9 +174,7 @@ class Othello25:
 
     def draw(self):
         pyxel.cls(0)
-        # 演出中は何も描画しない
         if self.scene in ["TITLE_START", "RESULT_START"]: return
-        
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK 3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
