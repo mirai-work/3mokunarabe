@@ -13,34 +13,34 @@
         }
         /* HTML文字用レイヤー */
         .ui-layer {
-            position: fixed; top: 30%; width: 100%; z-index: 5;
-            text-align: center; font-family: sans-serif; font-size: 50px;
-            color: white; text-shadow: 3px 3px 8px black; display: none;
-            pointer-events: none;
+            position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 5; font-family: sans-serif; font-size: 50px; color: white;
+            text-shadow: 3px 3px 8px black; pointer-events: none; display: none;
+            text-align: center; width: 100%;
         }
         canvas {
             position: fixed !important; left: 50% !important; top: 50% !important;
             transform: translate(-50%, -50%) !important; z-index: 2 !important;
-            image-rendering: pixelated; pointer-events: none;
+            image-rendering: pixelated;
         }
     </style>
     <script>
-        function toggleUI(bg, state) {
+        function toggleUI(bg, title, win, lose) {
             document.getElementById("bg").style.backgroundImage = bg;
-            document.getElementById("text-title").style.display = (state === "TITLE") ? "block" : "none";
-            document.getElementById("text-win").style.display = (state === "WIN") ? "block" : "none";
-            document.getElementById("text-lose").style.display = (state === "LOSE") ? "block" : "none";
+            document.getElementById("text-title").style.display = title;
+            document.getElementById("text-win").style.display = win;
+            document.getElementById("text-lose").style.display = lose;
         }
-        function showTitle() { toggleUI("url('./title.jpg')", "TITLE"); }
-        function showGame() { toggleUI("none", "NONE"); }
-        function showWin() { toggleUI("url('./win.jpg')", "WIN"); }
-        function showLose() { toggleUI("url('./lose.jpg')", "LOSE"); }
+        function showTitle() { toggleUI("url('./title.jpg')", "block", "none", "none"); }
+        function showGame() { toggleUI("none", "none", "none", "none"); }
+        function showWin() { toggleUI("url('./win.jpg')", "none", "block", "none"); }
+        function showLose() { toggleUI("url('./lose.jpg')", "none", "none", "block"); }
         window.onload = showTitle;
     </script>
 </head>
 <body>
     <div id="bg"></div>
-    <div id="text-title" class="ui-layer">ATTACK 3MOKU<br><small style="font-size:20px;">CLICK TO START</small></div>
+    <div id="text-title" class="ui-layer">ATTACK 3MOKU</div>
     <div id="text-win" class="ui-layer" style="color: yellow;">YOU WIN!</div>
     <div id="text-lose" class="ui-layer" style="color: red;">GAME OVER</div>
     <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
