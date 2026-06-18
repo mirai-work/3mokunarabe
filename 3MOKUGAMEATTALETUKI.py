@@ -170,11 +170,14 @@ class Othello25:
     # ターン変更
     # =========================
     def change_turn(self):
+
         self.turn = 3 - self.turn
+
+        if self.scene != "GAME":
+            return
 
         if self.turn == 2:
             self.cpu_move()
-
        
 
     # =========================
@@ -201,7 +204,13 @@ class Othello25:
         for fx, fy in flips:
             self.grids[fy][fx] = 2
 
+         # ★勝敗チェック
         self.check_game_over()
+
+        # ★ここが重要：ゲーム終了なら止める
+        if self.scene == "RESULT":
+            return
+
         self.change_turn()
 
     # =========================
