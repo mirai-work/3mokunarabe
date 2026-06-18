@@ -38,8 +38,8 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        self.scene = "TITLE_START"
-        self.transition_timer = 90
+        self.scene = "TITLE"
+        self.transition_timer = 0
         pyxel.stop()
         if js:
             try: js.showTitleBG()
@@ -127,10 +127,11 @@ class Othello25:
 
     def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
-        if self.scene == "TITLE_START" or self.scene == "RESULT_START":
+        if self.scene == "RESULT_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0:
-                if self.scene == "TITLE_START":
+                self.reset_game()
+            return
                     self.scene = "TITLE"
                 else:
                     self.reset_game()
