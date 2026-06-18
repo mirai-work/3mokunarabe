@@ -147,7 +147,7 @@ class Othello25:
         elif self.scene == "RESULT_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0
-            　　　self.scene = "TITLE"
+            　　　
             　　　self.reset_game()
             return
         if self.scene == "TITLE":
