@@ -1,65 +1,51 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-<meta charset="utf-8">
-<title>ATTACK 3MOKU</title>
-
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-
-<style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:black;
-}
-
-#bg{
-    position:fixed;
-    left:0;
-    top:0;
-    width:100vw;
-    height:100vh;
-    object-fit:cover;
-    z-index:-1;
-}
-</style>
+    <meta charset="utf-8">
+    <title>ATTACK 3MOKU</title>
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+    <style>
+        body { margin: 0; background: black; overflow: hidden; }
+        /* 背景画像を表示するための領域 */
+        #bg { 
+            position: fixed; 
+            width: 100vw; 
+            height: 100vh; 
+            background-size: cover; 
+            background-position: center;
+            z-index: 1; 
+        }
+        /* PyxelのCanvasを中央に配置 */
+        canvas { 
+            position: fixed; 
+            z-index: 2; 
+            left: 50%; 
+            top: 50%; 
+            transform: translate(-50%, -50%) scale(5); 
+            image-rendering: pixelated; 
+        }
+    </style>
 </head>
-
 <body>
+    <div id="bg"></div>
+    <pyxel-run name="main.py"></pyxel-run>
 
-<img id="bg" src="title.jpg">
+    <script>
+        const bg = document.getElementById("bg");
 
-<pyxel-play
-    root="."
-    name="main.py">
-</pyxel-play>
-
-<script>
-
-function showTitleBG(){
-    document.getElementById("bg").src="title.jpg";
-}
-
-function showWinBG(){
-    document.getElementById("bg").src="win.jpg";
-}
-
-function showLoseBG(){
-    document.getElementById("bg").src="lose.jpg";
-}
-
-function clearBG(){
-    document.getElementById("bg").style.display="none";
-}
-
-window.showTitleBG = showTitleBG;
-window.showWinBG   = showWinBG;
-window.showLoseBG  = showLoseBG;
-window.clearBG     = clearBG;
-
-</script>
-
+        // Pythonの js.関数名() で呼び出される関数群
+        function showTitleBG() { 
+            bg.style.backgroundImage = "url('./title.jpg')"; 
+        }
+        function showWinBG() { 
+            bg.style.backgroundImage = "url('./win.jpg')"; 
+        }
+        function showLoseBG() { 
+            bg.style.backgroundImage = "url('./lose.jpg')"; 
+        }
+        function clearBG() { 
+            bg.style.backgroundImage = "none"; 
+        }
+    </script>
 </body>
 </html>
