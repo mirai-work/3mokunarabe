@@ -66,7 +66,7 @@ class Othello25:
                 js.showGame()
             except:
                 pass
-
+    
         pyxel.playm(0, loop=True)
 
     # =========================
@@ -175,8 +175,7 @@ class Othello25:
         if self.turn == 2:
             self.cpu_move()
 
-        # ここで勝敗チェック
-        self.check_game_over()
+       
 
     # =========================
     # CPU
@@ -202,6 +201,7 @@ class Othello25:
         for fx, fy in flips:
             self.grids[fy][fx] = 2
 
+        self.check_game_over()
         self.change_turn()
 
     # =========================
