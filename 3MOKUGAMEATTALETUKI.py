@@ -18,7 +18,6 @@ class Othello25:
         pyxel.load("KAIYOU.pyxres")
         self.init_sound()
         pyxel.mouse(True)
-        # 演出用タイマーとステートの初期化
         self.transition_timer = 0
         self.reset_game()
         pyxel.run(self.update, self.draw)
@@ -45,8 +44,6 @@ class Othello25:
         self.result_timer = 0
         self.pass_timer = 0
         self.attack_chance_available = True
-        
-        # 演出開始：TITLE_STARTステートにする
         self.scene = "TITLE_START"
         self.transition_timer = 150
         pyxel.stop()
@@ -120,7 +117,7 @@ class Othello25:
         else:
             can_me = any(len(self.get_flips(x,y,self.turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
             if not can_me: self.check_game_over()
-            else: self.pass_timer = 30 
+            else: self.pass_timer = 30
 
     def check_game_over(self):
         p1 = sum(row.count(1) for row in self.grids)
@@ -137,26 +134,20 @@ class Othello25:
         pyxel.stop()
         pyxel.play(3, 2 if self.status == 1 else 3)
 
-  　 def update(self):
+    def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
-        
-        # 演出終了時の遷移
         if self.scene == "TITLE_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0:
                 self.scene = "TITLE"
                 if js:
-                    try: js.clearBG() # ここでキャンバスを表示状態にする
+                    try: js.clearBG()
                     except: pass
             return
-            
         elif self.scene == "RESULT_START":
             self.transition_timer -= 1
-            if self.transition_timer <= 0:
-                self.scene = "RESULT"
-                # 必要ならここでclearBGを呼ぶか、タイトル画面へ戻す
+            if self.transition_timer <= 0: self.scene = "RESULT"
             return
-
         if self.scene == "TITLE":
             if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
                 self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
@@ -172,7 +163,6 @@ class Othello25:
                     try: js.clearBG()
                     except: pass
                 pyxel.playm(0, loop=True)
-        
         elif self.scene == "GAME":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
@@ -186,7 +176,6 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_move()
-        
         elif self.scene == "ATTACK_CHANCE":
             if self.turn == 1:
                 if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
@@ -199,10 +188,8 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_attack()
-        
         elif self.scene == "RESULT":
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                self.reset_game()
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT): self.reset_game()
 
     def draw(self):
         pyxel.cls(0)
@@ -212,7 +199,6 @@ class Othello25:
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
             pyxel.text(2, 42, "KEY 1-3", 7)
             return
-
         for i in range(BOARD_SIZE + 1):
             pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
             pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
