@@ -137,7 +137,7 @@ class Othello25:
         pyxel.stop()
         pyxel.play(3, 2 if self.status == 1 else 3)
 
-   def update(self):
+  　 def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
         
         # 演出終了時の遷移
