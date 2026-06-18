@@ -198,7 +198,7 @@ class Othello25:
 
                 if js:
                     try:
-                js.clearBG()
+                        js.clearBG()
                     except:
                         pass
 
@@ -210,7 +210,7 @@ class Othello25:
                 self.scene = "GAME"
 
                 if js:
-            try:
+                    try:
                         js.clearBG()
                     except:
                         pass
@@ -264,7 +264,45 @@ class Othello25:
         pyxel.cls(0)
         if self.scene == "TITLE":
 
-            return
+            pyxel.cls(0)
+
+            if self.scene == "TITLE":
+                return
+
+            # 盤面
+            for i in range(BOARD_SIZE + 1):
+                pyxel.line(
+                    i * CELL_SIZE, 0,
+                    i * CELL_SIZE, BOARD_SIZE * CELL_SIZE,
+                    1
+                )
+
+                pyxel.line(
+                    0, i * CELL_SIZE,
+                    BOARD_SIZE * CELL_SIZE, i * CELL_SIZE,
+                    1
+                )
+
+            # 駒
+            for y in range(BOARD_SIZE):
+                for x in range(BOARD_SIZE):
+
+                    if self.grids[y][x]:
+
+                        u, v = CHARACTER_LIST[
+                            self.grids[y][x] - 1
+                        ]
+
+                        pyxel.blt(
+                            x * CELL_SIZE + 1,
+                            y * CELL_SIZE + 1,
+                            0,
+                            u,
+                            v,
+                            8,
+                            8,
+                            0
+                        )
             
             if self.pass_timer > 0:
                 pyxel.text(15, 20, "PASS", 7)
