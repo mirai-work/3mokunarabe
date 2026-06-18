@@ -56,15 +56,23 @@ class Attack25Game:
         return s if s else (a if a else e)
 
     def update(self):
-        if self.state == "TITLE":
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                my = pyxel.mouse_y
-                if 45 <= my <= 100:
-                    self.level = 1 if my < 65 else (2 if my < 85 else 3)
-                    self.board = [0] * 25
-                    self.state = "PLAYING"
-                    js.showGame()
-        elif self.state == "PLAYING":
+        def update(self):
+            if self.state == "TITLE":
+                if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                    mx, my = pyxel.mouse_x, pyxel.mouse_y
+                    # クリック判定のY座標を、LVテキストの表示位置に合わせました
+                    # LV1:50(45-60), LV2:70(65-80), LV3:90(85-100)
+                    if 45 <= my <= 60:
+                        self.level = 1
+                        self.reset_game(); self.state = "PLAYING"; js.showGame()
+                    elif 65 <= my <= 80:
+                        self.level = 2
+                        self.reset_game(); self.state = "PLAYING"; js.showGame()
+                    elif 85 <= my <= 100:
+                        self.level = 3
+                        self.reset_game(); self.state = "PLAYING"; js.showGame()
+        
+            elif self.state == "PLAYING":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 c, r = (pyxel.mouse_x - self.start_x) // 18, (pyxel.mouse_y - self.start_y) // 18
                 if 0 <= c < 5 and 0 <= r < 5 and (idx := r * 5 + c) in self.get_valid_moves(1):
