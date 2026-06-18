@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -7,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
 <style>
-
 html,body{
     margin:0;
     width:100%;
@@ -42,9 +42,9 @@ canvas{
     width:100%;
     text-align:center;
     z-index:5;
+    font-family:sans-serif;
     color:white;
     text-shadow:4px 4px 8px black;
-    font-family:sans-serif;
 }
 
 #title{
@@ -53,13 +53,8 @@ canvas{
 }
 
 #menu{
-    top:40%;
+    top:35%;
     font-size:48px;
-}
-
-.menuitem{
-    margin:20px;
-    cursor:pointer;
 }
 
 #win{
@@ -75,12 +70,9 @@ canvas{
     color:red;
     display:none;
 }
-
 </style>
 
 <script>
-
-let selectedLevel = 0;
 
 function hideAll(){
     document.getElementById("title").style.display="none";
@@ -89,60 +81,34 @@ function hideAll(){
     document.getElementById("lose").style.display="none";
 }
 
-function selectLevel(level){
-
-    selectedLevel = level;
-
-    if(window.pyodide){
-        try{
-            pyodide.globals.set("HTML_LEVEL",level);
-        }catch(e){}
-    }
-
-}
-
 function showTitle(){
-
     document.getElementById("bg").style.backgroundImage =
         "url('./title.jpg')";
-
     hideAll();
-
     document.getElementById("title").style.display="block";
     document.getElementById("menu").style.display="block";
 }
 
 function showGame(){
-
     document.getElementById("bg").style.backgroundImage = "none";
-
     hideAll();
-
 }
 
 function showWin(){
-
     document.getElementById("bg").style.backgroundImage =
         "url('./win.jpg')";
-
     hideAll();
-
     document.getElementById("win").style.display="block";
 }
 
 function showLose(){
-
     document.getElementById("bg").style.backgroundImage =
         "url('./lose.jpg')";
-
     hideAll();
-
     document.getElementById("lose").style.display="block";
 }
 
-window.onload=function(){
-    showTitle();
-}
+window.onload = showTitle;
 
 </script>
 
@@ -157,11 +123,9 @@ ATTACK 3MOKU
 </div>
 
 <div id="menu" class="ui">
-
-<div class="menuitem">LV1</div>
-<div class="menuitem">LV2</div>
-<div class="menuitem">LV3</div>
-
+LV1<br>
+LV2<br>
+LV3
 </div>
 
 <div id="win" class="ui">
@@ -174,8 +138,7 @@ LOSE!
 
 <pyxel-run
 root="."
-name="3MOKUGAMEATTALETUKI.py">
-</pyxel-run>
+name="3MOKUGAMEATTALETUKI.py"> </pyxel-run>
 
 </body>
 </html>
