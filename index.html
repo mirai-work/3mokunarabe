@@ -4,34 +4,12 @@
     <meta charset="utf-8">
     <title>ATTACK 3MOKU</title>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-  <style>
-    body { 
-        margin: 0; 
-        background: black; 
-        overflow: hidden; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
-    #bg { 
-        position: fixed; 
-        width: 100vw; 
-        height: 100vh; 
-        background-size: cover; 
-        background-position: center;
-        z-index: 1; 
-    }
-    canvas { 
-        z-index: 2; 
-        /* 画面に合わせつつ、アスペクト比を維持して拡大 */
-        max-width: 90vw;
-        max-height: 90vh;
-        image-rendering: pixelated;
-        /* Pyxelの規定サイズを維持するための枠 */
-        border: 2px solid #555;
-    }
-</style>
+    <style>
+        body { margin: 0; background: black; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #bg { position: fixed; width: 100vw; height: 100vh; background-size: cover; background-position: center; z-index: 1; }
+        /* canvasをデフォルトで隠す */
+        canvas { z-index: 2; max-width: 90vw; max-height: 90vh; image-rendering: pixelated; border: 2px solid #555; visibility: hidden; }
+    </style>
 </head>
 <body>
     <div id="bg"></div>
@@ -40,19 +18,35 @@
     <script>
         const bg = document.getElementById("bg");
 
-        // Pythonの js.関数名() で呼び出される関数群
+        // キャンバスの表示を切り替える補助関数
+        function setCanvasVisibility(visible) {
+            const canvas = document.querySelector("canvas");
+            if (canvas) {
+                canvas.style.visibility = visible ? "visible" : "hidden";
+            }
+        }
+
         function showTitleBG() { 
             bg.style.backgroundImage = "url('./title.jpg')"; 
+            setCanvasVisibility(false); // 画像時は隠す
         }
         function showWinBG() { 
             bg.style.backgroundImage = "url('./win.jpg')"; 
+            setCanvasVisibility(false);
         }
         function showLoseBG() { 
             bg.style.backgroundImage = "url('./lose.jpg')"; 
+            setCanvasVisibility(false);
         }
         function clearBG() { 
             bg.style.backgroundImage = "none"; 
+            setCanvasVisibility(true); // ゲーム開始時は出す
         }
+
+        // ページ読み込み時に初期状態を強制適用
+        window.addEventListener('load', () => {
+            showTitleBG();
+        });
     </script>
 </body>
 </html>
