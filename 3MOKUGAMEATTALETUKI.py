@@ -261,85 +261,211 @@ class Othello25:
                 self.reset_game(); self.scene = "TITLE"
 
     def draw(self):
-        
+
         pyxel.cls(0)
 
         # ----------------
-        # タイトル
+        # TITLE
         # ----------------
         if self.scene == "TITLE":
 
-            pyxel.text(5, 5,
-                       "ATTACK 3MOKU",
-                       pyxel.frame_count % 16)
-    
+            pyxel.text(
+                2,
+                5,
+                "ATTACK 3MOKU",
+                pyxel.frame_count % 16
+            )
+
             pyxel.text(5, 18, "LV1", 11)
             pyxel.text(5, 26, "LV2", 10)
             pyxel.text(5, 34, "LV3", 8)
 
             pyxel.text(
-                5,
+                2,
                 42,
-                "(KEY 1-3)",
+                "KEY 1-3",
                 7
             )
 
             return
-       # ----------------
-       # ゲーム画面
-       # ----------------
-       for i in range(BOARD_SIZE + 1): 
 
-            # 盤面
-            for i in range(BOARD_SIZE + 1):
-                pyxel.line(
-                    i * CELL_SIZE, 0,
-                    i * CELL_SIZE, BOARD_SIZE * CELL_SIZE,
-                    1
+        # ----------------
+        # BOARD
+        # ----------------
+        for i in range(BOARD_SIZE + 1):
+
+            pyxel.line(
+                i * CELL_SIZE,
+                0,
+                i * CELL_SIZE,
+                BOARD_SIZE * CELL_SIZE,
+                1
+            )
+
+            pyxel.line(
+                0,
+                i * CELL_SIZE,
+                BOARD_SIZE * CELL_SIZE,
+                i * CELL_SIZE,
+                1
+            )
+
+        # ----------------
+        # PIECES
+        # ----------------
+        for y in range(BOARD_SIZE):
+            for x in range(BOARD_SIZE):
+
+                if self.grids[y][x]:
+
+                    u, v = CHARACTER_LIST[
+                        self.grids[y][x] - 1
+                    ]
+
+                    pyxel.blt(
+                        x * CELL_SIZE + 1,
+                        y * CELL_SIZE + 1,
+                        0,
+                        u,
+                        v,
+                        8,
+                        8,
+                        0
+                    )
+
+        # TURN
+        pyxel.text(
+            2,
+            SCREEN_SIZE - 8,
+            "YOU" if self.turn == 1 else "CPU",
+            7
+        )
+
+        # PASS
+        if self.pass_timer > 0:
+
+            pyxel.rect(
+                5,
+                15,
+                35,
+                10,
+                0
+            )
+
+            pyxel.rectb(
+                5,
+                15,
+                35,
+                10,
+                7
+            )
+
+            pyxel.text(
+                12,
+                18,
+                "PASS",
+                7
+            )
+
+        # ATTACK CHANCE
+        if self.scene == "ATTACK_CHANCE":
+
+            c = 10 if pyxel.frame_count % 10 < 5 else 7
+
+            pyxel.rectb(
+                0,
+                0,
+                SCREEN_SIZE,
+                SCREEN_SIZE,
+                c
+            )
+
+            if self.turn == 1:
+
+                pyxel.text(
+                    2,
+                    20,
+                    "ATTACK!",
+                    10
+             )
+    
+            else:
+
+                pyxel.text(
+                    2,
+                    20,
+                    "CPU ATK!",
+                    8
                 )
 
-                pyxel.line(
-                    0, i * CELL_SIZE,
-                    BOARD_SIZE * CELL_SIZE, i * CELL_SIZE,
-                    1
+        # RESULT
+        if self.scene == "RESULT":
+
+            pyxel.rect(
+                2,
+                12,
+                42,
+                22,
+                0
+            )
+
+            pyxel.rectb(
+                2,
+                12,
+                42,
+                22,
+                 7
+            )
+
+            p1 = sum(
+                row.count(1)
+                for row in self.grids
+            )
+
+            cpu = sum(
+                row.count(2)
+                for row in self.grids
+            )
+
+            pyxel.text(
+                5,
+                16,
+                f"Y:{p1}",
+                7
+            )
+
+            pyxel.text(
+                5,
+                22,
+                f"C:{cpu}",
+                7
+            )
+
+            if self.status == 1:
+    
+                pyxel.text(
+                    5,
+                    28,
+                    "WIN!",
+                    10
                 )
 
-            # 駒
-            for y in range(BOARD_SIZE):
-                for x in range(BOARD_SIZE):
+            elif self.status == 2:
 
-                    if self.grids[y][x]:
+                pyxel.text(
+                     5,
+                    28,
+                    "LOSE",
+                    8
+                )
 
-                        u, v = CHARACTER_LIST[
-                            self.grids[y][x] - 1
-                        ]
+            else:
 
-                        pyxel.blt(
-                            x * CELL_SIZE + 1,
-                            y * CELL_SIZE + 1,
-                            0,
-                            u,
-                            v,
-                            8,
-                            8,
-                            0
-                        )
-            
-            if self.pass_timer > 0:
-                pyxel.text(15, 20, "PASS", 7)
-
-            if self.scene == "ATTACK_CHANCE":
-                if self.turn == 1:
-                    pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, 10 if pyxel.frame_count % 10 < 5 else 7)
-                    pyxel.text(2, 20, "ATTACK!", 10)
-                else:
-                    pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, 8 if pyxel.frame_count % 10 < 5 else 7)
-                    pyxel.text(2, 20, "CPU ATK!", 8)
-
-            if self.scene == "RESULT":
-                pyxel.rect(2, 15, 42, 20, 0); pyxel.rectb(2, 15, 42, 20, 1)
-                p1, cpu = sum(r.count(1) for r in self.grids), sum(r.count(2) for r in self.grids)
-                pyxel.text(5, 20, f"Y:{p1} C:{cpu}", 7)
-                pyxel.text(5, 28, "WIN!" if self.status==1 else "LOSE", 10 if self.status==1 else 8)
+                pyxel.text(
+                    5,
+                    28,
+                    "DRAW",
+                    7
+                )
 
 Othello25()
