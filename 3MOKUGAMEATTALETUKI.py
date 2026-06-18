@@ -15,29 +15,18 @@ class Attack25Game:
     def __init__(self):
         pyxel.init(160, 120, title="PANEL ATTACK 3MOKU")
         pyxel.mouse(True)
+        self.reset_game()
+        pyxel.run(self.update, self.draw)
+
+    def reset_game(self):
         self.state = "TITLE"
         self.level = 1
         self.board = [0] * 25
         self.turn = 1
         self.ai_delay = 0
         self.attack_chance_used = False
-        self.flip_effects = []
-        self.effect_timer = 0
+        self.start_x, self.start_y = 35, 25
         self.p_w, self.p_h, self.p_gap = 16, 16, 2
-        total_w = 5 * (self.p_w + self.p_gap) - self.p_gap
-        total_h = 5 * (self.p_h + self.p_gap) - self.p_gap
-        self.start_x = (160 - total_w) // 2
-        self.start_y = (120 - total_h) // 2 + 6
-        pyxel.run(self.update, self.draw)
-
-    def reset_game(self):
-        self.board = [0] * 25
-        self.turn = 1
-        self.ai_delay = 0
-        self.attack_chance_used = False
-        self.flip_effects = []
-        self.effect_timer = 0
-        self.state = "PLAYING"
 
     def get_flippable(self, idx, color):
         res, opp = [], 3 - color
@@ -62,62 +51,58 @@ class Attack25Game:
                 r, c = i // 5, i % 5
                 for dr in [-1, 0, 1]:
                     for dc in [-1, 0, 1]:
-                        nr, nc = r + dr, c + dc
-                        if 0 <= nr < 5 and 0 <= nc < 5 and self.board[nr * 5 + nc] == color:
+                        if 0 <= r+dr < 5 and 0 <= c+dc < 5 and self.board[(r+dr)*5+(c+dc)] == color:
                             a.append(i); break
         return s if s else (a if a else e)
 
-    def process_turn_end(self, color):
-        if self.board.count(0) == 5 and not self.attack_chance_used:
-            self.state = "ATTACK_CHANCE"; self.attack_chance_used = True; return
+    def update(self):
+        if self.state == "TITLE":
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                my = pyxel.mouse_y
+                if 45 <= my <= 100:
+                    self.level = 1 if my < 65 else (2 if my < 85 else 3)
+                    self.board = [0] * 25
+                    self.state = "PLAYING"
+                    js.showGame()
+        elif self.state == "PLAYING":
+            if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                c, r = (pyxel.mouse_x - self.start_x) // 18, (pyxel.mouse_y - self.start_y) // 18
+                if 0 <= c < 5 and 0 <= r < 5 and (idx := r * 5 + c) in self.get_valid_moves(1):
+                    self.board[idx] = 1
+                    for f in self.get_flippable(idx, 1): self.board[f] = 1
+                    self.process_end(1)
+            elif self.turn == 2:
+                self.ai_delay += 1
+                if self.ai_delay > 20:
+                    moves = self.get_valid_moves(2)
+                    if moves:
+                        if self.level == 1: idx = random.choice(moves)
+                        elif self.level == 2: idx = sorted([(len(self.get_flippable(m, 2)), m) for m in moves], reverse=True)[:3][0][1]
+                        else: idx = max([(len(self.get_flippable(m, 2)), m) for m in moves])[1]
+                        self.board[idx] = 2
+                        for f in self.get_flippable(idx, 2): self.board[f] = 2
+                        self.process_end(2)
+        elif self.state in ["WIN", "LOSE"]:
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                self.reset_game(); js.showTitle()
+
+    def process_end(self, color):
         if 0 not in self.board:
             p1, p2 = self.board.count(1), self.board.count(2)
             self.state = "WIN" if p1 > p2 else "LOSE"
             js.showWin() if self.state == "WIN" else js.showLose()
         else: self.turn = 3 - color; self.ai_delay = 0
 
-    def update(self):
-        if self.effect_timer > 0: self.effect_timer -= 1; return
-        if self.state == "TITLE":
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT): self.reset_game(); js.showGame()
-        elif self.state == "PLAYING":
-            if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                c, r = (pyxel.mouse_x - self.start_x) // (self.p_w + self.p_gap), (pyxel.mouse_y - self.start_y) // (self.p_h + self.p_gap)
-                if 0 <= c < 5 and 0 <= r < 5:
-                    idx = r * 5 + c
-                    if idx in self.get_valid_moves(1):
-                        self.board[idx] = 1
-                        for f in self.get_flippable(idx, 1): self.board[f] = 1
-                        self.process_turn_end(1)
-            elif self.turn == 2:
-                self.ai_delay += 1
-                if self.ai_delay > 20:
-                    moves = self.get_valid_moves(2)
-                    idx = random.choice(moves)
-                    self.board[idx] = 2
-                    for f in self.get_flippable(idx, 2): self.board[f] = 2
-                    self.process_turn_end(2)
-        elif self.state == "ATTACK_CHANCE":
-            if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-                c, r = (pyxel.mouse_x - self.start_x) // (self.p_w + self.p_gap), (pyxel.mouse_y - self.start_y) // (self.p_h + self.p_gap)
-                idx = r * 5 + c
-                if 0 <= idx < 25 and self.board[idx] == 2: self.board[idx] = 1; self.state = "PLAYING"
-            elif self.turn == 2:
-                opps = [i for i, v in enumerate(self.board) if v == 1]
-                if opps: self.board[random.choice(opps)] = 2
-                self.state = "PLAYING"
-        elif self.state in ["WIN", "LOSE"]:
-            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT): self.state = "TITLE"; js.showTitle()
-
     def draw(self):
-        if self.state not in ["PLAYING", "ATTACK_CHANCE"]: return
         pyxel.cls(0)
-        pyxel.text(5, 5, f"P1:{self.board.count(1)} AI:{self.board.count(2)}", 7)
-        if self.state == "ATTACK_CHANCE": pyxel.text(90, 5, "ATTACK!", 10)
-        for i in range(25):
-            x = self.start_x + (i % 5) * (self.p_w + self.p_gap)
-            y = self.start_y + (i // 5) * (self.p_h + self.p_gap)
-            pyxel.rect(x, y, self.p_w, self.p_h, 13 if self.board[i]==0 else (11 if self.board[i]==1 else 8))
-            pyxel.rectb(x, y, self.p_w, self.p_h, 7)
+        if self.state == "TITLE":
+            pyxel.text(45, 20, "ATTACK 3MOKU", 7)
+            pyxel.text(60, 50, "LV1", 11); pyxel.text(60, 70, "LV2", 10); pyxel.text(60, 90, "LV3", 8)
+        elif self.state == "PLAYING":
+            pyxel.text(5, 5, f"P1:{self.board.count(1)} AI:{self.board.count(2)}", 7)
+            for i in range(25):
+                x, y = self.start_x + (i % 5) * 18, self.start_y + (i // 5) * 18
+                pyxel.rect(x, y, 16, 16, 13 if self.board[i]==0 else (11 if self.board[i]==1 else 8))
+                pyxel.rectb(x, y, 16, 16, 7)
 
 Attack25Game()
