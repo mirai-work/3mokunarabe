@@ -1,8 +1,7 @@
 import pyxel
 import random
 
-try:
-    import js
+try: import js
 except ImportError:
     class DummyJS:
         def showTitle(self): pass
@@ -83,7 +82,6 @@ class Attack25Game:
     def get_ai_move(self):
         valid = self.get_valid_moves(2)
         if not valid: return None
-        if self.level == 1: return random.choice(valid)
         best, max_f = None, -1
         for idx in valid:
             f = len(self.get_flippable_cells(idx, 2))
@@ -136,10 +134,13 @@ class Attack25Game:
     def draw(self):
         if self.state not in ["PLAYING", "ATTACK_CHANCE"]: return
         pyxel.cls(0)
+        pyxel.text(5, 5, f"P1:{self.board.count(1)} AI:{self.board.count(2)}", 7)
         for i in range(25):
             x, y = self.start_x + (i%5)*18, self.start_y + (i//5)*18
             color = 13 if self.board[i]==0 else (11 if self.board[i]==1 else 8)
             pyxel.rect(x, y, 16, 16, color)
             pyxel.rectb(x, y, 16, 16, 7)
+        for f in self.flip_effects:
+            pyxel.rect(self.start_x + (f%5)*18, self.start_y + (f//5)*18, 16, 16, 7)
 
 Attack25Game()
