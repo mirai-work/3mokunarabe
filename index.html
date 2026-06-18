@@ -2,76 +2,61 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>画面切り替え＋Pyxel連動</title>
+<title>ATTACK 3MOKU</title>
 
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
 <style>
-body {
-    margin: 0;
-    overflow: hidden;
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:black;
 }
 
-/* 画面共通 */
-.screen {
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-    display: none;
-    font-size: 50px;
-    color: white;
-    text-align: center;
-    line-height: 100vh;
+/* 背景 */
+#bg{
+    position:fixed;
+    left:0;
+    top:0;
+    width:100vw;
+    height:100vh;
+    background-size:cover;
+    background-position:center;
+    z-index:-1;
 }
 
-/* 各画面 */
-#title { background: black; display: block; }
-#game  { background: green; }
-#win   { background: blue; }
-#lose  { background: red; }
-
-canvas {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+/* Pyxel画面 */
+canvas{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
 }
 </style>
 
 <script>
 
-// =========================
-// 画面切り替え（共通関数）
-// =========================
-function showScreen(id){
-    document.querySelectorAll(".screen").forEach(s=>{
-        s.style.display = "none";
-    });
-    document.getElementById(id).style.display = "block";
-}
-
-// =========================
-// Pyxelから呼ばれる関数
-// =========================
+// ======================
+// 背景切り替え関数
+// ======================
 function showTitle(){
-    showScreen("title");
+    document.getElementById("bg").style.backgroundImage = "url('./title.jpg')";
 }
 
 function showGame(){
-    showScreen("game");
+    document.getElementById("bg").style.backgroundImage = "none";
 }
 
 function showWin(){
-    showScreen("win");
+    document.getElementById("bg").style.backgroundImage = "url('./win.jpg')";
 }
 
 function showLose(){
-    showScreen("lose");
+    document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')";
 }
 
-// =========================
-// 最初はタイトル
-// =========================
 window.onload = function(){
     showTitle();
 }
@@ -82,13 +67,8 @@ window.onload = function(){
 
 <body>
 
-<!-- 画面 -->
-<div id="title" class="screen">TITLE</div>
-<div id="game" class="screen">GAME</div>
-<div id="win" class="screen">WIN</div>
-<div id="lose" class="screen">LOSE</div>
+<div id="bg"></div>
 
-<!-- Pyxel -->
 <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 
 </body>
