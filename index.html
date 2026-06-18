@@ -16,7 +16,7 @@
             font-family: sans-serif;
         }
 
-        /* 背景画像を画面いっぱいに表示する設定 */
+        /* 背景 */
         #bg {
             position: fixed;
             left: 0;
@@ -26,23 +26,26 @@
             background-size: cover;
             background-position: center;
             z-index: -1;
-            transition: background-image 0.3s ease; /* 背景切り替えを滑らかにする演出 */
+            transition: background-image 0.3s ease;
         }
 
-        /* Pyxelのゲーム画面（中央配置 & ドット絵をクッキリ表示） */
+        /* Pyxel画面（!important を追加して中央配置を強制固定） */
         canvas {
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            display: block;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); /* ゲーム画面の輪郭を際立たせる影 */
+            position: fixed !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            display: block !important;
+            
+            /* 背景画像より必ず手前に表示させる */
+            z-index: 10 !important;
+
+            /* ドット絵をクッキリ表示 */
             image-rendering: pixelated;
         }
     </style>
 
     <script>
-        // Python（Pyxel）側から呼び出される背景切り替え関数群
         function showTitle() {
             document.getElementById("bg").style.backgroundImage = "url('./title.jpg')";
         }
@@ -59,7 +62,6 @@
             document.getElementById("bg").style.backgroundImage = "url('./lose.jpg')";
         }
 
-        // ページ読み込み時に初期状態としてタイトル背景を設定
         window.onload = function() {
             showTitle();
         }
