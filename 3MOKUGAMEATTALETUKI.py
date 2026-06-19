@@ -175,7 +175,7 @@ class Othello25:
         pyxel.cls(0)
         if self.scene == "TITLE_START": return
         if self.scene == "TITLE":
-            pyxel.text(2, 5, "ATTACK 3MOKU", pyxel.frame_count % 16)
+            pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
         else:
             for i in range(BOARD_SIZE + 1):
