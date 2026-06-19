@@ -243,8 +243,13 @@ class Othello25:
                     pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
                     pyxel.text(2, 20, "ATTACK!", 10)
             elif self.status == 3:
-                # 引き分け時のみ中央に光るDRAW!を表示
+                # 困った顔の描写（プログラムコードで直接描画）
+                pyxel.circ(23, 23, 8, 7)
+                pyxel.line(19, 20, 21, 22, 0)
+                pyxel.line(25, 20, 27, 22, 0)
+                pyxel.line(20, 27, 26, 27, 0)
+                # 光るDRAW!の文字
                 c = 7 if pyxel.frame_count % 10 < 5 else 0
-                pyxel.text(10, 18, "DRAW!", c)
+                pyxel.text(10, 35, "DRAW!", c)
 
 Othello25()
