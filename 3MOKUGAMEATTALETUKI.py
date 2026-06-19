@@ -8,13 +8,16 @@ except:
 
 CELL_SIZE = 9
 BOARD_SIZE = 5
+# 表示領域を縦に少し拡張しました
 SCREEN_SIZE = CELL_SIZE * BOARD_SIZE + 1
+VIEW_HEIGHT = SCREEN_SIZE + 10 
 DIRECTIONS = [(-1,-1), (0,-1), (1,-1), (-1,0), (1,0), (-1,1), (0,1), (1,1)]
 CHARACTER_LIST = [(0, 128), (0, 136)]
 
 class Othello25:
     def __init__(self):
-        pyxel.init(SCREEN_SIZE, SCREEN_SIZE, title="ATTACK3MOKU")
+        # 拡張した縦サイズを反映
+        pyxel.init(SCREEN_SIZE, VIEW_HEIGHT, title="ATTACK3MOKU")
         try:
             pyxel.load("KAIYOU.pyxres")
         except:
@@ -212,13 +215,9 @@ class Othello25:
             if self.scene != "RESULT_START":
                 p1 = sum(row.count(1) for row in self.grids)
                 cpu = sum(row.count(2) for row in self.grids)
-                # 白ふち取りに変更
-                pyxel.text(1, SCREEN_SIZE - 9, f"YOU:{p1}", 7); pyxel.text(3, SCREEN_SIZE - 9, f"YOU:{p1}", 7)
-                pyxel.text(2, SCREEN_SIZE - 10, f"YOU:{p1}", 7); pyxel.text(2, SCREEN_SIZE - 8, f"YOU:{p1}", 7)
-                pyxel.text(2, SCREEN_SIZE - 9, f"YOU:{p1}", 12)
-                pyxel.text(24, SCREEN_SIZE - 9, f"CPU:{cpu}", 7); pyxel.text(26, SCREEN_SIZE - 9, f"CPU:{cpu}", 7)
-                pyxel.text(25, SCREEN_SIZE - 10, f"CPU:{cpu}", 7); pyxel.text(25, SCREEN_SIZE - 8, f"CPU:{cpu}", 7)
-                pyxel.text(25, SCREEN_SIZE - 9, f"CPU:{cpu}", 8)
+                y_pos = SCREEN_SIZE + 2
+                pyxel.text(2, y_pos, f"YOU:{p1}", 7); pyxel.text(2, y_pos, f"YOU:{p1}", 12)
+                pyxel.text(25, y_pos, f"CPU:{cpu}", 7); pyxel.text(25, y_pos, f"CPU:{cpu}", 8)
                 if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
                 if self.scene == "ATTACK_CHANCE":
                     c = 10 if pyxel.frame_count % 10 < 5 else 7
@@ -229,4 +228,3 @@ class Othello25:
                 pyxel.text(10, 35, "DRAW!", c)
 
 Othello25()
-
