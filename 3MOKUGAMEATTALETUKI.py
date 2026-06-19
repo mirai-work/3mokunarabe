@@ -28,6 +28,7 @@ class Othello25:
         # --- 効果音 (SE) ---
         pyxel.sound(0).set("e2e2", "n", "7", "f", 5) # ピースを置く音
         pyxel.sound(1).set("g3g3 c4", "p", "7", "v", 10) # アタック音
+        # エラー回避のため c5 を c4 に修正
         pyxel.sound(2).set("c4e4g4 c4 r c4", "p", "7", "v", 10) # アタックチャンス発動音
 
         # --- BGM 0: タイトル画面 ---
@@ -35,12 +36,23 @@ class Othello25:
         pyxel.sound(11).set("c2 g2 c2 g2  c2 g2 c2 g2", "s", "4", "n", 25)
         pyxel.music(0).set([10], [11], [], [])
 
-        # --- BGM 1: ゲームプレイ画面 ---
+        # --- BGM 1: ゲームプレイ画面 (LV1用) ---
         pyxel.sound(12).set("a2 c3 e3 a3  g2 b2 d3 g3", "t", "5", "n", 25)
         pyxel.sound(13).set("a1 e2 a1 e2  g1 d2 g1 d2", "p", "5", "n", 25)
         pyxel.music(1).set([12], [13], [], [])
 
+        # --- BGM 4: ゲームプレイ画面 (LV2用) --- 追加
+        pyxel.sound(16).set("c3 e3 g3 c4 g3 e3 c3 e3", "t", "5", "n", 20)
+        pyxel.sound(17).set("c2 g2 c2 g2 c2 g2 c2 g2", "p", "5", "n", 20)
+        pyxel.music(4).set([16], [17], [], [])
+
+        # --- BGM 5: ゲームプレイ画面 (LV3用) --- 追加
+        pyxel.sound(18).set("e3 e3 g3 e3 a3 g3 e3 d3", "t", "6", "n", 15)
+        pyxel.sound(19).set("e2 e2 e2 e2 e2 e2 e2 e2", "n", "5", "f", 15)
+        pyxel.music(5).set([18], [19], [], [])
+
         # --- BGM 2: YOU WIN (勝利) ---
+        # エラー回避のため c5 を c4 に修正
         pyxel.sound(14).set("c3 e3 g3 c4 e4 c4 e4 g4 c4 r r r", "p", "6", "n", 25)
         pyxel.music(2).set([14], [], [], [])
 
@@ -89,7 +101,7 @@ class Othello25:
         bx, by, bflips, _ = move
         self.grids[by][bx] = 2
         for fx, fy in bflips: self.grids[fy][fx] = 2
-        pyxel.play(3, 0)
+        pyxel.play(3, 0) # CPUが駒を置いたときの音
         self.check_attack_chance_trigger()
 
     def evaluate_move(self, x, y, flips_count):
@@ -167,13 +179,16 @@ class Othello25:
             if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
                 self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
                 self.scene = "GAME"
-                # ゲーム中BGM再生
-                pyxel.playm(1, loop=True)
+                
+                # 難易度に合わせてBGMを出し分け
+                bgm = 1 if self.difficulty == 1 else (4 if self.difficulty == 2 else 5)
+                pyxel.playm(bgm, loop=True)
+                
             elif pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 self.difficulty = 2
                 self.scene = "GAME"
-                # ゲーム中BGM再生
-                pyxel.playm(1, loop=True)
+                # マウスクリック時はデフォルトLV2のBGM
+                pyxel.playm(4, loop=True)
                 
         elif self.scene == "GAME":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
@@ -183,7 +198,7 @@ class Othello25:
                     if flips:
                         self.grids[my][mx] = 1
                         for fx, fy in flips: self.grids[fy][fx] = 1
-                        pyxel.play(3, 0)
+                        pyxel.play(3, 0) # プレイヤーが駒を置いたときの音
                         self.check_attack_chance_trigger()
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
