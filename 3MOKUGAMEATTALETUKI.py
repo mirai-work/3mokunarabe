@@ -28,7 +28,7 @@ class Othello25:
         # --- 効果音 (SE) ---
         pyxel.sound(0).set("e2e2", "n", "7", "f", 5) # ピースを置く音
         pyxel.sound(1).set("g3g3 c4", "p", "7", "v", 10) # アタック音
-        pyxel.sound(2).set("c4e4g4 c5 r c5", "p", "7", "v", 10) # アタックチャンス発動音
+        pyxel.sound(2).set("c4e4g4 c4 r c4", "p", "7", "v", 10) # アタックチャンス発動音
 
         # --- BGM 0: タイトル画面 ---
         pyxel.sound(10).set("c3 e3 g3 c4  e3 g3 c4 e4", "t", "4", "n", 25)
@@ -41,7 +41,7 @@ class Othello25:
         pyxel.music(1).set([12], [13], [], [])
 
         # --- BGM 2: YOU WIN (勝利) ---
-        pyxel.sound(14).set("c3 e3 g3 c4 e4 c4 e4 g4 c5 r r r", "p", "6", "n", 25)
+        pyxel.sound(14).set("c3 e3 g3 c4 e4 c4 e4 g4 c4 r r r", "p", "6", "n", 25)
         pyxel.music(2).set([14], [], [], [])
 
         # --- BGM 3: YOU LOSE / DRAW (敗北・引き分け) ---
