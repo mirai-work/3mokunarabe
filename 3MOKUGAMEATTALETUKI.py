@@ -14,7 +14,7 @@ CHARACTER_LIST = [(0, 128), (0, 136)]
 
 class Othello25:
     def __init__(self):
-        pyxel.init(SCREEN_SIZE, SCREEN_SIZE, title="ATTACK 3MOKU")
+        pyxel.init(SCREEN_SIZE, SCREEN_SIZE, title="ATTACK3MOKU")
         pyxel.load("KAIYOU.pyxres")
         self.init_sound()
         pyxel.mouse(True)
