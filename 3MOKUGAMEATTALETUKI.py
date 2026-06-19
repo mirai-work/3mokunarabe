@@ -242,5 +242,9 @@ class Othello25:
                     c = 10 if pyxel.frame_count % 10 < 5 else 7
                     pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
                     pyxel.text(2, 20, "ATTACK!", 10)
+            elif self.status == 3:
+                # 引き分け時のみ中央に光るDRAW!を表示
+                c = 7 if pyxel.frame_count % 10 < 5 else 0
+                pyxel.text(10, 18, "DRAW!", c)
 
 Othello25()
