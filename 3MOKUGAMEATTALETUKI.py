@@ -15,21 +15,38 @@ CHARACTER_LIST = [(0, 128), (0, 136)]
 class Othello25:
     def __init__(self):
         pyxel.init(SCREEN_SIZE, SCREEN_SIZE, title="ATTACK3MOKU")
-        pyxel.load("KAIYOU.pyxres")
+        try:
+            pyxel.load("KAIYOU.pyxres")
+        except:
+            pass
         self.init_sound()
         pyxel.mouse(True)
         self.reset_game()
         pyxel.run(self.update, self.draw)
 
     def init_sound(self):
-        pyxel.sound(0).set("e1e1", "n", "7", "f", 5)
-        pyxel.sound(1).set("g2g2 c3", "p", "7", "v", 10)
-        pyxel.sound(2).set("c3e3g3 c4 e3g3c4 e4", "p", "6", "v", 15)
-        pyxel.sound(3).set("c2g1c1", "n", "6", "f", 20)
-        pyxel.sound(6).set("c3e3g3 c4 r c4", "p", "7", "v", 10)
-        pyxel.sound(4).set("c3 c3 g2 g2 c3 c3 e3 d3", "p", "5", "v", 20)
-        pyxel.sound(5).set("c2 r c2 r g1 r g1 r", "s", "4", "v", 20)
-        pyxel.music(0).set([4], [5], [], [])
+        # --- 効果音 (SE) ---
+        pyxel.sound(0).set("e2e2", "n", "7", "f", 5) # ピースを置く音
+        pyxel.sound(1).set("g3g3 c4", "p", "7", "v", 10) # アタック音
+        pyxel.sound(2).set("c4e4g4 c5 r c5", "p", "7", "v", 10) # アタックチャンス発動音
+
+        # --- BGM 0: タイトル画面 ---
+        pyxel.sound(10).set("c3 e3 g3 c4  e3 g3 c4 e4", "t", "4", "n", 25)
+        pyxel.sound(11).set("c2 g2 c2 g2  c2 g2 c2 g2", "s", "4", "n", 25)
+        pyxel.music(0).set([10], [11], [], [])
+
+        # --- BGM 1: ゲームプレイ画面 ---
+        pyxel.sound(12).set("a2 c3 e3 a3  g2 b2 d3 g3", "t", "5", "n", 25)
+        pyxel.sound(13).set("a1 e2 a1 e2  g1 d2 g1 d2", "p", "5", "n", 25)
+        pyxel.music(1).set([12], [13], [], [])
+
+        # --- BGM 2: YOU WIN (勝利) ---
+        pyxel.sound(14).set("c3 e3 g3 c4 e4 c4 e4 g4 c5 r r r", "p", "6", "n", 25)
+        pyxel.music(2).set([14], [], [], [])
+
+        # --- BGM 3: YOU LOSE / DRAW (敗北・引き分け) ---
+        pyxel.sound(15).set("c3 g2 d#2 c2 g1 d#1 c1 r r r", "s", "6", "f", 25)
+        pyxel.music(3).set([15], [], [], [])
 
     def reset_game(self):
         self.grids = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]
@@ -87,7 +104,7 @@ class Othello25:
         if self.attack_chance_available and empty_count <= 8:
             self.scene = "ATTACK_CHANCE"
             self.attack_chance_available = False
-            pyxel.play(3, 6)
+            pyxel.play(3, 2)
             if self.turn == 2: self.wait_timer = 20
         else: self.change_turn()
 
@@ -117,35 +134,47 @@ class Othello25:
         self.status = 1 if p1 > cpu else (2 if cpu > p1 else 3)
         self.scene = "RESULT_START"
         self.transition_timer = 90
+        
+        # HTML（JS）側への通知
         if js:
             try:
                 if self.status == 1: js.showWinBG()
                 elif self.status == 2: js.showLoseBG()
             except: pass
-        pyxel.play(3, 2 if self.status == 1 else 3)
+        
+        # BGMを切り替え（1=WIN: music(2), 2=LOSE/3=DRAW: music(3)）
+        pyxel.stop()
+        pyxel.playm(2 if self.status == 1 else 3, loop=False)
 
     def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
+        
         if self.scene == "TITLE_START" or self.scene == "RESULT_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0:
                 if self.scene == "TITLE_START":
                     self.scene = "TITLE"
+                    # タイトルBGM再生
+                    pyxel.playm(0, loop=True)
                 else:
                     self.reset_game()
                 if js:
                     try: js.clearBG()
                     except: pass
             return
+            
         if self.scene == "TITLE":
             if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
                 self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
                 self.scene = "GAME"
-                pyxel.playm(0, loop=True)
+                # ゲーム中BGM再生
+                pyxel.playm(1, loop=True)
             elif pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 self.difficulty = 2
                 self.scene = "GAME"
-                pyxel.playm(0, loop=True)
+                # ゲーム中BGM再生
+                pyxel.playm(1, loop=True)
+                
         elif self.scene == "GAME":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
@@ -159,6 +188,7 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_move()
+                
         elif self.scene == "ATTACK_CHANCE":
             if self.turn == 1 and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
@@ -174,6 +204,8 @@ class Othello25:
     def draw(self):
         pyxel.cls(0)
         if self.scene == "TITLE_START": return
+        
+        # 以前のコードの通り、Pyxelでタイトルを描画
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
@@ -186,6 +218,7 @@ class Othello25:
                     if self.grids[y][x]:
                         u, v = CHARACTER_LIST[self.grids[y][x] - 1]
                         pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
+                        
             if self.scene != "RESULT_START":
                 pyxel.text(2, SCREEN_SIZE - 8, "YOU BLUE" if self.turn == 1 else "CPU RED", 7)
                 if self.pass_timer > 0:
