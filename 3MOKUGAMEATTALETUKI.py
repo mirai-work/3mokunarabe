@@ -101,7 +101,8 @@ class Othello25:
         bx, by, bflips, _ = move
         self.grids[by][bx] = 2
         for fx, fy in bflips: self.grids[fy][fx] = 2
-        pyxel.play(3, 0) # CPUが駒を置いたときの音
+        # --- 変更箇所: CPUが置いた際も効果音0を鳴らす ---
+        pyxel.play(3, 0) 
         self.check_attack_chance_trigger()
 
     def evaluate_move(self, x, y, flips_count):
@@ -147,14 +148,12 @@ class Othello25:
         self.scene = "RESULT_START"
         self.transition_timer = 90
         
-        # HTML（JS）側への通知
         if js:
             try:
                 if self.status == 1: js.showWinBG()
                 elif self.status == 2: js.showLoseBG()
             except: pass
         
-        # BGMを切り替え（1=WIN: music(2), 2=LOSE/3=DRAW: music(3)）
         pyxel.stop()
         pyxel.playm(2 if self.status == 1 else 3, loop=False)
 
@@ -166,7 +165,6 @@ class Othello25:
             if self.transition_timer <= 0:
                 if self.scene == "TITLE_START":
                     self.scene = "TITLE"
-                    # タイトルBGM再生
                     pyxel.playm(0, loop=True)
                 else:
                     self.reset_game()
@@ -179,15 +177,12 @@ class Othello25:
             if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
                 self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
                 self.scene = "GAME"
-                
-                # 難易度に合わせてBGMを出し分け
                 bgm = 1 if self.difficulty == 1 else (4 if self.difficulty == 2 else 5)
                 pyxel.playm(bgm, loop=True)
                 
             elif pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
                 self.difficulty = 2
                 self.scene = "GAME"
-                # マウスクリック時はデフォルトLV2のBGM
                 pyxel.playm(4, loop=True)
                 
         elif self.scene == "GAME":
@@ -198,7 +193,7 @@ class Othello25:
                     if flips:
                         self.grids[my][mx] = 1
                         for fx, fy in flips: self.grids[fy][fx] = 1
-                        pyxel.play(3, 0) # プレイヤーが駒を置いたときの音
+                        pyxel.play(3, 0)
                         self.check_attack_chance_trigger()
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
@@ -220,7 +215,6 @@ class Othello25:
         pyxel.cls(0)
         if self.scene == "TITLE_START": return
         
-        # 以前のコードの通り、Pyxelでタイトルを描画
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
@@ -243,12 +237,10 @@ class Othello25:
                     pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
                     pyxel.text(2, 20, "ATTACK!", 10)
             elif self.status == 3:
-                # 困った顔の描写（プログラムコードで直接描画）
                 pyxel.circ(23, 23, 8, 7)
                 pyxel.line(19, 20, 21, 22, 0)
                 pyxel.line(25, 20, 27, 22, 0)
                 pyxel.line(20, 27, 26, 27, 0)
-                # 光るDRAW!の文字
                 c = 7 if pyxel.frame_count % 10 < 5 else 0
                 pyxel.text(10, 35, "DRAW!", c)
 
