@@ -187,7 +187,7 @@ class Othello25:
                         u, v = CHARACTER_LIST[self.grids[y][x] - 1]
                         pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
             if self.scene != "RESULT_START":
-                pyxel.text(2, SCREEN_SIZE - 8, "YOU" if self.turn == 1 else "CPU", 7)
+                pyxel.text(2, SCREEN_SIZE - 8, "YOU BLUE" if self.turn == 1 else "CPU RED", 7)
                 if self.pass_timer > 0:
                     pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
                 if self.scene == "ATTACK_CHANCE":
