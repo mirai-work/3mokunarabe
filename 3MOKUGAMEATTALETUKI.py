@@ -28,7 +28,12 @@ class Othello25:
         pyxel.run(self.update, self.draw)
 
     def is_decision_pressed(self):
-        return pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A) or pyxel.btnp(pyxel.KEY_SPACE)
+        # MOUSE, GAMEPAD, KEYBOARD の入力をタプルで同時判定
+        match (pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT), pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A), pyxel.btnp(pyxel.KEY_SPACE)):
+            case (True, _, _) | (_, True, _) | (_, _, True):
+                return True
+            case _:
+                return False
 
     def init_sound(self):
         pyxel.sound(0).set("e2e2", "n", "7", "f", 5)
@@ -62,169 +67,297 @@ class Othello25:
         self.transition_timer = 90
         self.cursor_x = 2; self.cursor_y = 2
         pyxel.stop()
-        if js:
-            try: js.showTitleBG()
-            except: pass
+        match bool(js):
+            case True:
+                try: js.showTitleBG()
+                except: pass
 
     def get_flips(self, x, y, player_turn):
-        if self.grids[y][x] != 0: return []
-        flips = []
-        opponent = 3 - player_turn
-        for dx, dy in DIRECTIONS:
-            nx, ny = x + dx, y + dy
-            temp = []
-            while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == opponent:
-                temp.append((nx, ny)); nx += dx; ny += dy
-            if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == player_turn:
-                flips.extend(temp)
-        return flips
+        match self.grids[y][x]:
+            case 0:
+                flips = []
+                opponent = 3 - player_turn
+                for dx, dy in DIRECTIONS:
+                    nx, ny = x + dx, y + dy
+                    temp = []
+                    while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == opponent:
+                        temp.append((nx, ny)); nx += dx; ny += dy
+                    
+                    match (0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == player_turn):
+                        case True:
+                            flips.extend(temp)
+                return flips
+            case _:
+                return []
 
     def cpu_move(self):
         valid_moves = []
         for y in range(BOARD_SIZE):
             for x in range(BOARD_SIZE):
                 flips = self.get_flips(x, y, 2)
-                if flips:
-                    score = self.evaluate_move(x, y, len(flips))
-                    valid_moves.append((x, y, flips, score))
-        if not valid_moves: self.change_turn(); return
-        if self.difficulty == 1:
-            move = random.choice(valid_moves)
-        elif self.difficulty == 2:
-            valid_moves.sort(key=lambda x: x[3], reverse=True)
-            move = random.choice(valid_moves[:2])
-        else:
-            valid_moves.sort(key=lambda x: x[3], reverse=True)
-            move = valid_moves[0]
-        bx, by, bflips, _ = move
-        self.grids[by][bx] = 2
-        for fx, fy in bflips: self.grids[fy][fx] = 2
-        pyxel.play(3, 0)
-        self.check_attack_chance_trigger()
+                match bool(flips):
+                    case True:
+                        score = self.evaluate_move(x, y, len(flips))
+                        valid_moves.append((x, y, flips, score))
+        
+        match valid_moves:
+            case []: 
+                self.change_turn()
+            case _:
+                match self.difficulty:
+                    case 1:
+                        move = random.choice(valid_moves)
+                    case 2:
+                        valid_moves.sort(key=lambda x: x[3], reverse=True)
+                        move = random.choice(valid_moves[:2])
+                    case _:
+                        valid_moves.sort(key=lambda x: x[3], reverse=True)
+                        move = valid_moves[0]
+                
+                bx, by, bflips, _ = move
+                self.grids[by][bx] = 2
+                for fx, fy in bflips: self.grids[fy][fx] = 2
+                pyxel.play(3, 0)
+                self.check_attack_chance_trigger()
 
     def evaluate_move(self, x, y, flips_count):
         score = flips_count
-        if (x, y) in [(0,0), (0,4), (4,0), (4,4)]: score += 100
-        elif x == 0 or x == 4 or y == 0 or y == 4: score += 10
-        else: score -= 5
+        match (x, y):
+            # 四隅の判定
+            case (0, 0) | (0, 4) | (4, 0) | (4, 4):
+                score += 100
+            # 外周の判定（ガード節を利用）
+            case _ if x == 0 or x == 4 or y == 0 or y == 4:
+                score += 10
+            case _:
+                score -= 5
         return score
 
     def check_attack_chance_trigger(self):
         empty_count = sum(row.count(0) for row in self.grids)
-        if self.attack_chance_available and empty_count <= 8:
-            self.scene = "ATTACK_CHANCE"
-            self.attack_chance_available = False
-            pyxel.play(3, 2)
-            if self.turn == 2: self.wait_timer = 20
-        else: self.change_turn()
+        match (self.attack_chance_available and empty_count <= 8):
+            case True:
+                self.scene = "ATTACK_CHANCE"
+                self.attack_chance_available = False
+                pyxel.play(3, 2)
+                match self.turn:
+                    case 2: self.wait_timer = 20
+            case False:
+                self.change_turn()
 
     def cpu_attack(self):
         targets = [(x, y) for y in range(BOARD_SIZE) for x in range(BOARD_SIZE) if self.grids[y][x] == 1]
-        if targets:
-            tx, ty = random.choice(targets)
-            self.grids[ty][tx] = 0
-            pyxel.play(3, 1)
+        match bool(targets):
+            case True:
+                tx, ty = random.choice(targets)
+                self.grids[ty][tx] = 0
+                pyxel.play(3, 1)
         self.scene = "GAME"
         self.change_turn()
 
     def change_turn(self):
         next_turn = 3 - self.turn
         can_next = any(len(self.get_flips(x,y,next_turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
-        if can_next:
-            self.turn = next_turn
-            if self.turn == 2: self.wait_timer = 20
-        else:
-            can_me = any(len(self.get_flips(x,y,self.turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
-            if not can_me: self.check_game_over()
-            else: self.pass_timer = 30
+        match can_next:
+            case True:
+                self.turn = next_turn
+                match self.turn:
+                    case 2: self.wait_timer = 20
+            case False:
+                can_me = any(len(self.get_flips(x,y,self.turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
+                match can_me:
+                    case False: 
+                        self.check_game_over()
+                    case True: 
+                        self.pass_timer = 30
 
     def check_game_over(self):
         p1 = sum(row.count(1) for row in self.grids)
         cpu = sum(row.count(2) for row in self.grids)
-        self.status = 1 if p1 > cpu else (2 if cpu > p1 else 3)
+        
+        # 勝敗ステータスの判定
+        match (p1 > cpu, cpu > p1):
+            case (True, False): self.status = 1
+            case (False, True): self.status = 2
+            case _: self.status = 3
+            
         self.scene = "RESULT_START"
         self.transition_timer = 90
-        if js:
-            try:
-                if self.status == 1: js.showWinBG()
-                elif self.status == 2: js.showLoseBG()
-            except: pass
+        
+        match bool(js):
+            case True:
+                try:
+                    match self.status:
+                        case 1: js.showWinBG()
+                        case 2: js.showLoseBG()
+                except: pass
+                
         pyxel.stop()
-        pyxel.playm(2 if self.status == 1 else 3, loop=False)
+        match self.status:
+            case 1: pyxel.playm(2, loop=False)
+            case _: pyxel.playm(3, loop=False)
 
     def update(self):
-        if self.pass_timer > 0: self.pass_timer -= 1
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP): self.cursor_y = max(0, self.cursor_y - 1)
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): self.cursor_y = min(BOARD_SIZE - 1, self.cursor_y + 1)
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): self.cursor_x = max(0, self.cursor_x - 1)
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
-        if self.scene == "TITLE_START" or self.scene == "RESULT_START":
-            self.transition_timer -= 1
-            if self.transition_timer <= 0:
-                if self.scene == "TITLE_START":
-                    self.scene = "TITLE"; pyxel.playm(0, loop=True)
-                else: self.reset_game()
-                if js:
-                    try: js.clearBG()
-                    except: pass
-            return
-        if self.scene == "TITLE":
-            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
-                self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
-                self.scene = "GAME"; pyxel.playm(1 if self.difficulty == 1 else (4 if self.difficulty == 2 else 5), loop=True)
-            elif self.is_decision_pressed():
-                self.difficulty = 2; self.scene = "GAME"; pyxel.playm(4, loop=True)
-        elif self.scene == "GAME":
-            if self.turn == 1:
-                mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
-                if self.is_decision_pressed():
-                    if 0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE:
-                        flips = self.get_flips(mx, my, 1)
-                        if flips:
-                            self.grids[my][mx] = 1
-                            for fx, fy in flips: self.grids[fy][fx] = 1
-                            pyxel.play(3, 0); self.check_attack_chance_trigger()
-            elif self.turn == 2:
-                if self.wait_timer > 0: self.wait_timer -= 1
-                else: self.cpu_move()
-        elif self.scene == "ATTACK_CHANCE":
-            if self.turn == 1 and self.is_decision_pressed():
-                mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
-                if 0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.grids[my][mx] == 2:
-                    self.grids[my][mx] = 0; pyxel.play(3, 1); self.scene = "GAME"; self.change_turn()
-            elif self.turn == 2:
-                if self.wait_timer > 0: self.wait_timer -= 1
-                else: self.cpu_attack()
+        match (self.pass_timer > 0):
+            case True: self.pass_timer -= 1
+
+        # 十字キーの入力をそれぞれmatch文へ
+        match pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP):
+            case True: self.cursor_y = max(0, self.cursor_y - 1)
+        match pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN):
+            case True: self.cursor_y = min(BOARD_SIZE - 1, self.cursor_y + 1)
+        match pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT):
+            case True: self.cursor_x = max(0, self.cursor_x - 1)
+        match pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT):
+            case True: self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
+
+        # メインのシーンコントロール分岐
+        match self.scene:
+            case "TITLE_START" | "RESULT_START":
+                self.transition_timer -= 1
+                match (self.transition_timer <= 0):
+                    case True:
+                        match self.scene:
+                            case "TITLE_START":
+                                self.scene = "TITLE"
+                                pyxel.playm(0, loop=True)
+                            case _:
+                                self.reset_game()
+                        match bool(js):
+                            case True:
+                                try: js.clearBG()
+                                except: pass
+                return
+                
+            case "TITLE":
+                # 1, 2, 3 のキー判定をタプルでマルチマッチング
+                match (pyxel.btnp(pyxel.KEY_1), pyxel.btnp(pyxel.KEY_2), pyxel.btnp(pyxel.KEY_3)):
+                    case (True, _, _):
+                        self.difficulty = 1
+                        self.scene = "GAME"
+                        pyxel.playm(1, loop=True)
+                    case (_, True, _):
+                        self.difficulty = 2
+                        self.scene = "GAME"
+                        pyxel.playm(4, loop=True)
+                    case (_, _, True):
+                        self.difficulty = 3
+                        self.scene = "GAME"
+                        pyxel.playm(5, loop=True)
+                    case _:
+                        match self.is_decision_pressed():
+                            case True:
+                                self.difficulty = 2
+                                self.scene = "GAME"
+                                pyxel.playm(4, loop=True)
+                                
+            case "GAME":
+                match self.turn:
+                    case 1:
+                        match (pyxel.mouse_x >= 0):
+                            case True: mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
+                            case False: mx, my = self.cursor_x, self.cursor_y
+                            
+                        match self.is_decision_pressed():
+                            case True:
+                                match (0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE):
+                                    case True:
+                                        flips = self.get_flips(mx, my, 1)
+                                        match bool(flips):
+                                            case True:
+                                                self.grids[my][mx] = 1
+                                                for fx, fy in flips: self.grids[fy][fx] = 1
+                                                pyxel.play(3, 0)
+                                                self.check_attack_chance_trigger()
+                    case 2:
+                        match (self.wait_timer > 0):
+                            case True: self.wait_timer -= 1
+                            case False: self.cpu_move()
+                            
+            case "ATTACK_CHANCE":
+                match self.turn:
+                    case 1:
+                        match self.is_decision_pressed():
+                            case True:
+                                match (pyxel.mouse_x >= 0):
+                                    case True: mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
+                                    case False: mx, my = self.cursor_x, self.cursor_y
+                                    
+                                match (0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.grids[my][mx] == 2):
+                                    case True:
+                                        self.grids[my][mx] = 0
+                                        pyxel.play(3, 1)
+                                        self.scene = "GAME"
+                                        self.change_turn()
+                    case 2:
+                        match (self.wait_timer > 0):
+                            case True: self.wait_timer -= 1
+                            case False: self.cpu_attack()
 
     def draw(self):
         pyxel.cls(0)
-        if self.scene == "TITLE_START": return
-        if self.scene == "TITLE":
-            pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
-            pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
-        else:
-            for i in range(BOARD_SIZE + 1):
-                pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
-                pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
-            for y in range(BOARD_SIZE):
-                for x in range(BOARD_SIZE):
-                    if self.grids[y][x]:
-                        u, v = CHARACTER_LIST[self.grids[y][x] - 1]
-                        pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
-            if self.turn == 1: pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
-            if self.scene != "RESULT_START":
-                p1 = sum(row.count(1) for row in self.grids)
-                cpu = sum(row.count(2) for row in self.grids)
-                y_pos = SCREEN_SIZE + 2
-                pyxel.text(2, y_pos, f"YOU:{p1}", 7); pyxel.text(2, y_pos, f"YOU:{p1}", 12)
-                pyxel.text(25, y_pos, f"CPU:{cpu}", 7); pyxel.text(25, y_pos, f"CPU:{cpu}", 8)
-                if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
-                if self.scene == "ATTACK_CHANCE":
-                    c = 10 if pyxel.frame_count % 10 < 5 else 7
-                    pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
-            elif self.status == 3:
-                pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
-                c = 7 if pyxel.frame_count % 10 < 5 else 0
-                pyxel.text(10, 35, "DRAW!", c)
+        match self.scene:
+            case "TITLE_START":
+                return
+                
+            case "TITLE":
+                pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
+                pyxel.text(5, 18, "LV1", 11)
+                pyxel.text(5, 26, "LV2", 10)
+                pyxel.text(5, 34, "LV3", 8)
+                
+            case _:
+                # 盤面グリッドの描画
+                for i in range(BOARD_SIZE + 1):
+                    pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
+                    pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
+                    
+                # コマの描画
+                for y in range(BOARD_SIZE):
+                    for x in range(BOARD_SIZE):
+                        match self.grids[y][x]:
+                            case 0: pass
+                            case g:
+                                u, v = CHARACTER_LIST[g - 1]
+                                pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
+                                
+                match self.turn:
+                    case 1:
+                        pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
+                        
+                match self.scene:
+                    case "RESULT_START":
+                        match self.status:
+                            case 3: # DRAW
+                                pyxel.circ(23, 23, 8, 7)
+                                pyxel.line(19, 20, 21, 22, 0)
+                                pyxel.line(25, 20, 27, 22, 0)
+                                pyxel.line(20, 27, 26, 27, 0)
+                                match (pyxel.frame_count % 10 < 5):
+                                    case True: c = 7
+                                    case False: c = 0
+                                pyxel.text(10, 35, "DRAW!", c)
+                    case _:
+                        p1 = sum(row.count(1) for row in self.grids)
+                        cpu = sum(row.count(2) for row in self.grids)
+                        y_pos = SCREEN_SIZE + 2
+                        pyxel.text(2, y_pos, f"YOU:{p1}", 7)
+                        pyxel.text(2, y_pos, f"YOU:{p1}", 12)
+                        pyxel.text(25, y_pos, f"CPU:{cpu}", 7)
+                        pyxel.text(25, y_pos, f"CPU:{cpu}", 8)
+                        
+                        match (self.pass_timer > 0):
+                            case True:
+                                pyxel.rect(5, 15, 35, 10, 0)
+                                pyxel.rectb(5, 15, 35, 10, 7)
+                                pyxel.text(12, 18, "PASS", 7)
+                                
+                        match self.scene:
+                            case "ATTACK_CHANCE":
+                                match (pyxel.frame_count % 10 < 5):
+                                    case True: c = 10
+                                    case False: c = 7
+                                pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c)
+                                pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
