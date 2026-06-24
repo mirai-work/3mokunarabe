@@ -144,8 +144,9 @@ class Othello25:
         
         match self.difficulty:
             case 1: depth = 1
-            case 2: depth = 3
-            case _: depth = 5
+            case 2: depth = 4
+            case 3: depth = 10
+            case _: depth = 4
         
         best = -math.inf
         best_move = moves[0]
