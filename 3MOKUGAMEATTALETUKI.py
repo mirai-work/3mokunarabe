@@ -161,8 +161,10 @@ class Othello25:
         match can_next:
             case True:
                 self.turn = next_turn
-                # ★修正箇所：プレイヤー・CPU問わず、手番移行時に一律でウェイト（15フレーム）をかける
-                self.wait_timer = 15
+                # ★バグ修正箇所①：手番が変わる際、プレイヤー/CPU問わず、一律で「15フレーム」の演出・入力制限ウェイトをかける
+                match self.turn:
+                    case 1: self.wait_timer = 15
+                    case 2: self.wait_timer = 20
             case False:
                 can_me = any(len(self.get_flips(x,y,self.turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
                 match can_me:
@@ -257,9 +259,9 @@ class Othello25:
             case "GAME":
                 match self.turn:
                     case 1:
-                        # ★修正箇所：プレイヤーのターンでもウェイトタイマーがある場合は入力を受け付けない
+                        # ★バグ修正箇所②：プレイヤーのターンであっても、タイマーが残っている間は入力を受け付けずにウェイトを減らす
                         match (self.wait_timer > 0):
-                            case True:
+                            case True: 
                                 self.wait_timer -= 1
                             case False:
                                 match (pyxel.mouse_x >= 0):
@@ -285,6 +287,7 @@ class Othello25:
             case "ATTACK_CHANCE":
                 match self.turn:
                     case 1:
+                        # ★バグ修正箇所③：アタックチャンス中のプレイヤー入力にもウェイトガードをかける
                         match (self.wait_timer > 0):
                             case True:
                                 self.wait_timer -= 1
