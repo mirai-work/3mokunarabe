@@ -140,8 +140,8 @@ class Othello25:
                 self.scene = "ATTACK_CHANCE"
                 self.attack_chance_available = False
                 pyxel.play(3, 2)
-                match self.turn:
-                    case 2: self.wait_timer = 20
+                # アタックチャンス突入時も手番に応じたウェイトを設定
+                self.wait_timer = 20
             case False:
                 self.change_turn()
 
@@ -161,8 +161,8 @@ class Othello25:
         match can_next:
             case True:
                 self.turn = next_turn
-                match self.turn:
-                    case 2: self.wait_timer = 20
+                # ★修正箇所：プレイヤー・CPU問わず、手番移行時に一律でウェイト（15フレーム）をかける
+                self.wait_timer = 15
             case False:
                 can_me = any(len(self.get_flips(x,y,self.turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
                 match can_me:
@@ -198,7 +198,7 @@ class Othello25:
             case _: pyxel.playm(3, loop=False)
 
     def update(self):
-        # ★バグ修正箇所：パス表示中はタイマーを減らして処理を中断（早期リターン）する
+        # パス表示中はタイマーを減らして処理を中断（早期リターン）する
         match (self.pass_timer > 0):
             case True: 
                 self.pass_timer -= 1
@@ -257,21 +257,26 @@ class Othello25:
             case "GAME":
                 match self.turn:
                     case 1:
-                        match (pyxel.mouse_x >= 0):
-                            case True: mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
-                            case False: mx, my = self.cursor_x, self.cursor_y
-                            
-                        match self.is_decision_pressed():
+                        # ★修正箇所：プレイヤーのターンでもウェイトタイマーがある場合は入力を受け付けない
+                        match (self.wait_timer > 0):
                             case True:
-                                match (0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE):
+                                self.wait_timer -= 1
+                            case False:
+                                match (pyxel.mouse_x >= 0):
+                                    case True: mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
+                                    case False: mx, my = self.cursor_x, self.cursor_y
+                                    
+                                match self.is_decision_pressed():
                                     case True:
-                                        flips = self.get_flips(mx, my, 1)
-                                        match bool(flips):
+                                        match (0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE):
                                             case True:
-                                                self.grids[my][mx] = 1
-                                                for fx, fy in flips: self.grids[fy][fx] = 1
-                                                pyxel.play(3, 0)
-                                                self.check_attack_chance_trigger()
+                                                flips = self.get_flips(mx, my, 1)
+                                                match bool(flips):
+                                                    case True:
+                                                        self.grids[my][mx] = 1
+                                                        for fx, fy in flips: self.grids[fy][fx] = 1
+                                                        pyxel.play(3, 0)
+                                                        self.check_attack_chance_trigger()
                     case 2:
                         match (self.wait_timer > 0):
                             case True: self.wait_timer -= 1
@@ -280,18 +285,22 @@ class Othello25:
             case "ATTACK_CHANCE":
                 match self.turn:
                     case 1:
-                        match self.is_decision_pressed():
+                        match (self.wait_timer > 0):
                             case True:
-                                match (pyxel.mouse_x >= 0):
-                                    case True: mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
-                                    case False: mx, my = self.cursor_x, self.cursor_y
-                                    
-                                match (0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.grids[my][mx] == 2):
+                                self.wait_timer -= 1
+                            case False:
+                                match self.is_decision_pressed():
                                     case True:
-                                        self.grids[my][mx] = 0
-                                        pyxel.play(3, 1)
-                                        self.scene = "GAME"
-                                        self.change_turn()
+                                        match (pyxel.mouse_x >= 0):
+                                            case True: mx, my = pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE
+                                            case False: mx, my = self.cursor_x, self.cursor_y
+                                            
+                                        match (0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.grids[my][mx] == 2):
+                                            case True:
+                                                self.grids[my][mx] = 0
+                                                pyxel.play(3, 1)
+                                                self.scene = "GAME"
+                                                self.change_turn()
                     case 2:
                         match (self.wait_timer > 0):
                             case True: self.wait_timer -= 1
