@@ -198,8 +198,11 @@ class Othello25:
             case _: pyxel.playm(3, loop=False)
 
     def update(self):
+        # ★バグ修正箇所：パス表示中はタイマーを減らして処理を中断（早期リターン）する
         match (self.pass_timer > 0):
-            case True: self.pass_timer -= 1
+            case True: 
+                self.pass_timer -= 1
+                return
 
         # 十字キーの入力をそれぞれmatch文へ
         match pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP):
