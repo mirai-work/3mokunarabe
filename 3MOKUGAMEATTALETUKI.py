@@ -143,20 +143,45 @@ class Othello25:
         if not moves: self.change_turn(); return
         
         match self.difficulty:
-            case 1: depth = 1
-            case 2: depth = 4
-            case 3: depth = 10
-            case _: depth = 4
-        
-        best = -math.inf
-        best_move = moves[0]
-        for mx, my in moves:
-            b = copy.deepcopy(self.grids)
-            self.apply_move_logic(b, mx, my, 2)
-            score = self.minimax(b, depth, 1, -math.inf, math.inf)
-            if score > best: best = score; best_move = (mx, my)
-        
-        self.apply_move_logic(self.grids, best_move[0], best_move[1], 2)
+            case 1:
+                depth = 1
+            case 2:
+                depth = 2
+            case 3:
+                depth = 4
+            case _:
+                depth = 2
+
+        # 20%の確率でミスする
+        if random.random() < 0.20:
+            best_move = random.choice(moves)
+
+        else:
+            best = -math.inf
+            best_move = moves[0]
+
+            for mx, my in moves:
+                b = copy.deepcopy(self.grids)
+                self.apply_move_logic(b, mx, my, 2)
+
+                score = self.minimax(
+                    b,
+                    depth,
+                    1,
+                    -math.inf,
+                    math.inf
+                )
+
+                if score > best:
+                    best = score
+                    best_move = (mx, my)
+
+        self.apply_move_logic(
+            self.grids,
+            best_move[0],
+            best_move[1],
+            2
+        )
         pyxel.play(3, 0)
         self.check_attack_chance_trigger()
 
@@ -169,16 +194,7 @@ class Othello25:
                 if self.turn == 2: self.wait_timer = 20
             case False: self.change_turn()
 
-    def cpu_attack(self):
-        targets = [(x, y) for y in range(BOARD_SIZE) for x in range(BOARD_SIZE) if self.grids[y][x] == 1]
-        match targets:
-            case []: pass
-            case _:
-                tx, ty = random.choice(targets)
-                self.grids[ty][tx] = 0
-                pyxel.play(3, 1)
-        self.scene = "GAME"; self.change_turn()
-
+   
     def change_turn(self):
         next_turn = 3 - self.turn
         can_next = any(len(self.get_flips(x,y,next_turn))>0 for y in range(BOARD_SIZE) for x in range(BOARD_SIZE))
@@ -246,15 +262,29 @@ class Othello25:
                             case False: self.cpu_move()
             case "ATTACK_CHANCE":
                 match self.turn:
-                    case 1 if self.is_decision_pressed():
-                        mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
-                        if 0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.grids[my][mx] == 2:
-                            self.grids[my][mx] = 0; pyxel.play(3, 1); self.scene = "GAME"; self.change_turn()
-                    case 2:
-                        match self.wait_timer > 0:
-                            case True: self.wait_timer -= 1
-                            case False: self.cpu_attack()
 
+                    case 1 if self.is_decision_pressed():
+                        mx, my = (
+                            pyxel.mouse_x // CELL_SIZE,
+                            pyxel.mouse_y // CELL_SIZE
+                        ) if pyxel.mouse_x >= 0 else (
+                            self.cursor_x,
+                            self.cursor_y
+                        )
+
+                        if (
+                            0 <= mx < BOARD_SIZE
+                            and 0 <= my < BOARD_SIZE
+                            and self.grids[my][mx] == 2
+                        ):
+                            self.grids[my][mx] = 0
+                            pyxel.play(3, 1)
+                            self.scene = "GAME"
+                            self.change_turn()
+
+                    case 2:
+                        self.scene = "GAME"
+                        self.change_turn()
     def draw(self):
         pyxel.cls(0)
         if self.scene == "TITLE_START": return
@@ -291,3 +321,4 @@ class Othello25:
                             pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
+
