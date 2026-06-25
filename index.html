@@ -1,80 +1,69 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<title>ATTACK 3MOKU</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATTACK 3MOKU</title>
+    
+    <style>
+        :root {
+            --bg-color: #000;
+        }
 
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+        body, html {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
 
-<style>
+        #game-background {
+            position: fixed;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.3s ease;
+            z-index: 0;
+        }
 
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:black;
-}
-
-#bg{
-    position:fixed;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    background-size:cover;
-    background-position:center center;
-    background-repeat:no-repeat;
-    z-index:0;
-}
-
-canvas{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    z-index:1;
-}
-
-</style>
-
-<script>
-
-function showTitleBG(){
-    document.getElementById("bg").style.backgroundImage =
-    "url('title.png')";
-}
-
-function showWinBG(){
-    document.getElementById("bg").style.backgroundImage =
-    "url('win.png')";
-}
-
-function showLoseBG(){
-    document.getElementById("bg").style.backgroundImage =
-    "url('lose.png')";
-}
-
-function clearBG(){
-    document.getElementById("bg").style.backgroundImage = "none";
-}
-
-window.onload = function(){
-    showTitleBG();
-}
-
-</script>
-
+        pyxel-play {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="bg"></div>
+    <div id="game-background" aria-hidden="true"></div>
 
-<pyxel-play
-root="."
-name="3MOKUGAMEATTALETUKI.py">
-</pyxel-play>
+    <pyxel-play root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-play>
 
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+    <script>
+        // Use a namespace object to avoid global scope pollution
+        const GameUI = {
+            element: document.getElementById('game-background'),
+            
+            setBg(imageName) {
+                this.element.style.backgroundImage = imageName ? `url('${imageName}')` : 'none';
+            }
+        };
+
+        // Expose to window if Pyxel needs to call these externally
+        window.showTitleBG = () => GameUI.setBg('title.png');
+        window.showWinBG   = () => GameUI.setBg('win.png');
+        window.showLoseBG  = () => GameUI.setBg('lose.png');
+        window.clearBG     = () => GameUI.setBg(null);
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            window.showTitleBG();
+        });
+    </script>
 </body>
 </html>
