@@ -1,66 +1,59 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<title>ATTACK 3MOKU</title>
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-<style>
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+    <meta charset="utf-8">
+    <title>ATTACK 3MOKU</title>
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: white;
+            font-family: sans-serif;
+        }
 
-    /* 背景動画を全画面に配置 */
-    #bg {
-        position: fixed;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
-        object-fit: cover;
-        z-index: 0;
-    }
+        /* 動画を表示するエリア */
+        #bg {
+            width: 640px; /* 必要に応じてサイズ調整してください */
+            height: 360px;
+            object-fit: cover;
+            border: 2px solid #333;
+        }
 
-    /* ゲーム画面を中央に配置 */
-    pyxel-run {
-        position: absolute;
-        left: 50%; top: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1;
-    }
+        /* Pyxelゲーム画面 */
+        pyxel-run {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        // 動画再生と切り替えの管理
+        function playVideo(fileName) {
+            let bg = document.getElementById("bg");
+            bg.src = fileName;
+            bg.play().catch(e => {
+                console.log("クリック待機中");
+            });
+        }
 
-    /* ゲーム画面の背景を透明にするための設定 */
-    pyxel-run canvas {
-        background-color: transparent !important;
-    }
-</style>
-<script>
-    // 動画再生用の関数
-    function playVideo(fileName) {
-        let bg = document.getElementById("bg");
-        bg.style.display = "block";
-        bg.src = fileName;
-        bg.play().catch(e => console.log("再生待機中: 画面をクリックしてください"));
-    }
+        function showTitleBG() { playVideo("title.mp4"); }
+        function showWinBG()   { playVideo("win.mp4"); }
+        function showLoseBG()  { playVideo("lose.mp4"); }
 
-    // 各シーンで呼ぶための関数
-    function showTitleBG() { playVideo("title.mp4"); }
-    function showWinBG()   { playVideo("win.mp4"); }
-    function showLoseBG()  { playVideo("lose.mp4"); }
-
-    function clearBG() {
-        let bg = document.getElementById("bg");
-        bg.pause();
-        bg.removeAttribute('src');
-        bg.load();
-        bg.style.display = "none";
-    }
-
-    window.onload = function() {
-        showTitleBG();
-    };
-</script>
+        window.onload = function() {
+            showTitleBG();
+        };
+    </script>
 </head>
 <body>
 
-<video id="bg" autoplay loop muted playsinline></video>
+    <video id="bg" autoplay loop muted playsinline></video>
 
-<pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
+    <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 
 </body>
 </html>
