@@ -1,52 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <meta charset="utf-8">
-    <title>ATTACK 3MOKU</title>
-    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-    <style>
-        body { margin: 0; background: black; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #bg { position: fixed; width: 100vw; height: 100vh; background-size: cover; background-position: center; z-index: 1; }
-        /* canvasをデフォルトで隠す */
-        canvas { z-index: 2; max-width: 90vw; max-height: 90vh; image-rendering: pixelated; border: 2px solid #555; visibility: hidden; }
-    </style>
+<meta charset="utf-8">
+<title>ATTACK 3MOKU</title>
+
+<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+
+<style>
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:black;
+}
+
+/* videoタグ用にスタイルを変更 */
+#bg{
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    object-fit:cover; /* 画面いっぱいに動画を広げる */
+    z-index:0;
+}
+
+canvas{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:1;
+}
+
+</style>
+
+<script>
+
+function showTitleBG(){
+    let bg = document.getElementById("bg");
+    bg.style.display = "block";
+    bg.src = "title.mp4"; /* タイトル用の動画ファイル名 */
+    bg.play();
+}
+
+function showWinBG(){
+    let bg = document.getElementById("bg");
+    bg.style.display = "block";
+    bg.src = "win.mp4"; /* 勝利時の動画ファイル名 */
+    bg.play();
+}
+
+function showLoseBG(){
+    let bg = document.getElementById("bg");
+    bg.style.display = "block";
+    bg.src = "lose.mp4"; /* 敗北時の動画ファイル名 */
+    bg.play();
+}
+
+function clearBG(){
+    let bg = document.getElementById("bg");
+    bg.pause();
+    bg.removeAttribute('src');
+    bg.load();
+    bg.style.display = "none"; /* ゲーム中の背景非表示 */
+}
+
+window.onload = function(){
+    showTitleBG();
+}
+
+</script>
+
 </head>
+
 <body>
-    <div id="bg"></div>
-    <pyxel-run name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 
-    <script>
-        const bg = document.getElementById("bg");
+<video id="bg" autoplay loop muted playsinline></video>
 
-        // キャンバスの表示を切り替える補助関数
-        function setCanvasVisibility(visible) {
-            const canvas = document.querySelector("canvas");
-            if (canvas) {
-                canvas.style.visibility = visible ? "visible" : "hidden";
-            }
-        }
+<pyxel-play
+root="."
+name="3MOKUGAMEATTALETUKI.py">
+</pyxel-play>
 
-        function showTitleBG() { 
-            bg.style.backgroundImage = "url('./title.jpg')"; 
-            setCanvasVisibility(false); // 画像時は隠す
-        }
-        function showWinBG() { 
-            bg.style.backgroundImage = "url('./win.jpg')"; 
-            setCanvasVisibility(false);
-        }
-        function showLoseBG() { 
-            bg.style.backgroundImage = "url('./lose.jpg')"; 
-            setCanvasVisibility(false);
-        }
-        function clearBG() { 
-            bg.style.backgroundImage = "none"; 
-            setCanvasVisibility(true); // ゲーム開始時は出す
-        }
-
-        // ページ読み込み時に初期状態を強制適用
-        window.addEventListener('load', () => {
-            showTitleBG();
-        });
-    </script>
 </body>
 </html>
