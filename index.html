@@ -7,7 +7,7 @@
 <style>
 html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
 
-/* 背景動画を全画面に */
+/* 動画を全画面に配置 */
 #bg {
     position: fixed;
     left: 0; top: 0;
@@ -25,16 +25,19 @@ pyxel-run {
 }
 </style>
 <script>
-// 動画を再生する関数
-function showBG(fileName) {
+// 動画を切り替える関数
+function playVideo(fileName) {
     let bg = document.getElementById("bg");
     bg.style.display = "block";
     bg.src = fileName;
     bg.play();
 }
-function showTitleBG() { showBG("title.mp4"); }
-function showWinBG()   { showBG("win.mp4"); }
-function showLoseBG()  { showBG("lose.mp4"); }
+
+// 呼び出し用関数
+function showTitleBG() { playVideo("title.mp4"); }
+function showWinBG()   { playVideo("win.mp4"); }
+function showLoseBG()  { playVideo("lose.mp4"); }
+
 function clearBG() {
     let bg = document.getElementById("bg");
     bg.pause();
@@ -42,11 +45,15 @@ function clearBG() {
     bg.load();
     bg.style.display = "none";
 }
+
 window.onload = function(){ showTitleBG(); }
 </script>
 </head>
 <body>
+
 <video id="bg" autoplay loop muted playsinline></video>
+
 <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
+
 </body>
 </html>
