@@ -152,8 +152,8 @@ class Othello25:
             case _:
                 depth = 2
 
-        # 40%の確率でミスする
-        if random.random() < 0.40:
+        # 60%の確率でミスする
+        if random.random() < 0.60:
             best_move = random.choice(moves)
 
         else:
