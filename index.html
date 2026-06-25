@@ -3,81 +3,50 @@
 <head>
 <meta charset="utf-8">
 <title>ATTACK 3MOKU</title>
-
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-
 <style>
-html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: black;
-}
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
 
-/* 背景動画を画面いっぱいに広げる */
+/* 背景動画を全画面に */
 #bg {
     position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
     object-fit: cover;
     z-index: 0;
 }
 
-/* ゲーム画面をど真ん中に配置する（ここを修正しました） */
+/* ゲーム画面を中央に */
 pyxel-run {
     position: absolute;
-    left: 50%;
-    top: 50%;
+    left: 50%; top: 50%;
     transform: translate(-50%, -50%);
     z-index: 1;
 }
 </style>
-
 <script>
-function showTitleBG(){
+// 動画を再生する関数
+function showBG(fileName) {
     let bg = document.getElementById("bg");
     bg.style.display = "block";
-    bg.src = "title.mp4";
+    bg.src = fileName;
     bg.play();
 }
-
-function showWinBG(){
-    let bg = document.getElementById("bg");
-    bg.style.display = "block";
-    bg.src = "win.mp4";
-    bg.play();
-}
-
-function showLoseBG(){
-    let bg = document.getElementById("bg");
-    bg.style.display = "block";
-    bg.src = "lose.mp4";
-    bg.play();
-}
-
-function clearBG(){
+function showTitleBG() { showBG("title.mp4"); }
+function showWinBG()   { showBG("win.mp4"); }
+function showLoseBG()  { showBG("lose.mp4"); }
+function clearBG() {
     let bg = document.getElementById("bg");
     bg.pause();
     bg.removeAttribute('src');
     bg.load();
     bg.style.display = "none";
 }
-
-window.onload = function(){
-    showTitleBG();
-}
+window.onload = function(){ showTitleBG(); }
 </script>
-
 </head>
-
 <body>
-
 <video id="bg" autoplay loop muted playsinline></video>
-
 <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
-
 </body>
 </html>
