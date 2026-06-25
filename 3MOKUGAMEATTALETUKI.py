@@ -42,17 +42,17 @@ canvas{
 
 function showTitleBG(){
     document.getElementById("bg").style.backgroundImage =
-    "url('title.png')";
+    "url('title.jpg')";
 }
 
 function showWinBG(){
     document.getElementById("bg").style.backgroundImage =
-    "url('win.png')";
+    "url('win.jpg')";
 }
 
 function showLoseBG(){
     document.getElementById("bg").style.backgroundImage =
-    "url('lose.png')";
+    "url('lose.jpg')";
 }
 
 function clearBG(){
