@@ -2,42 +2,65 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>DEBUG MODE</title>
+<title>ATTACK 3MOKU</title>
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 <style>
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-    #bg { position: fixed; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-    pyxel-run { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; }
-    /* デバッグ用表示 */
-    #status { position: absolute; top: 10px; left: 10px; color: yellow; z-index: 999; font-size: 20px; font-weight: bold; }
+
+    /* 背景動画を全画面に配置 */
+    #bg {
+        position: fixed;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        z-index: 0;
+    }
+
+    /* ゲーム画面を中央に配置 */
+    pyxel-run {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    }
+
+    /* ゲーム画面の背景を透明にするための設定 */
+    pyxel-run canvas {
+        background-color: transparent !important;
+    }
 </style>
+<script>
+    // 動画再生用の関数
+    function playVideo(fileName) {
+        let bg = document.getElementById("bg");
+        bg.style.display = "block";
+        bg.src = fileName;
+        bg.play().catch(e => console.log("再生待機中: 画面をクリックしてください"));
+    }
+
+    // 各シーンで呼ぶための関数
+    function showTitleBG() { playVideo("title.mp4"); }
+    function showWinBG()   { playVideo("win.mp4"); }
+    function showLoseBG()  { playVideo("lose.mp4"); }
+
+    function clearBG() {
+        let bg = document.getElementById("bg");
+        bg.pause();
+        bg.removeAttribute('src');
+        bg.load();
+        bg.style.display = "none";
+    }
+
+    window.onload = function() {
+        showTitleBG();
+    };
+</script>
 </head>
 <body>
 
-<div id="status">確認中...</div>
 <video id="bg" autoplay loop muted playsinline></video>
+
 <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
-
-<script>
-    let bg = document.getElementById("bg");
-    let status = document.getElementById("status");
-
-    bg.onloadeddata = () => { status.innerText = "成功: 動画を読み込みました"; };
-    bg.onerror = () => { status.innerText = "エラー: 動画が見つかりません(title.mp4)"; };
-    bg.onplay = () => { status.innerText = "再生中: 動画が再生されています"; };
-    
-    // 自動再生失敗時のケア
-    window.onclick = () => { 
-        bg.play(); 
-        status.innerText = "クリックされました: 再生を試みます";
-    };
-
-    function showTitleBG() { 
-        bg.src = "title.mp4"; 
-        bg.play().catch(() => { status.innerText = "自動再生ブロック中: 画面をクリックしてください"; }); 
-    }
-    window.onload = showTitleBG;
-</script>
 
 </body>
 </html>
