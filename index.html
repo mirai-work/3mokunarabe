@@ -5,55 +5,30 @@
     <title>ATTACK 3MOKU</title>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
     <style>
-        body {
-            margin: 0;
-            background-color: black;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: white;
-            font-family: sans-serif;
-        }
-
-        /* 動画を表示するエリア */
-        #bg {
-            width: 640px; /* 必要に応じてサイズ調整してください */
-            height: 360px;
-            object-fit: cover;
-            border: 2px solid #333;
-        }
-
-        /* Pyxelゲーム画面 */
-        pyxel-run {
-            margin-top: 20px;
-        }
+        body { margin: 0; background-color: black; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; }
+        #bg { width: 640px; height: 360px; object-fit: cover; border: 2px solid #333; cursor: pointer; }
+        pyxel-run { margin-top: 20px; }
+        #msg { margin-bottom: 10px; font-size: 18px; }
     </style>
-    <script>
-        // 動画再生と切り替えの管理
-        function playVideo(fileName) {
-            let bg = document.getElementById("bg");
-            bg.src = fileName;
-            bg.play().catch(e => {
-                console.log("クリック待機中");
-            });
-        }
-
-        function showTitleBG() { playVideo("title.mp4"); }
-        function showWinBG()   { playVideo("win.mp4"); }
-        function showLoseBG()  { playVideo("lose.mp4"); }
-
-        window.onload = function() {
-            showTitleBG();
-        };
-    </script>
 </head>
 <body>
 
-    <video id="bg" autoplay loop muted playsinline></video>
-
+    <div id="msg">動画を表示するにはここをクリックしてください</div>
+    <video id="bg" loop muted playsinline></video>
     <pyxel-run root="." name="3MOKUGAMEATTALETUKI.py"></pyxel-run>
 
+    <script>
+        let bg = document.getElementById("bg");
+        let msg = document.getElementById("msg");
+
+        // クリックされたら動画を読み込んで再生する
+        document.body.onclick = function() {
+            if (bg.src === "") {
+                bg.src = "title.mp4";
+                bg.play();
+                msg.innerText = "ゲーム開始！";
+            }
+        };
+    </script>
 </body>
 </html>
