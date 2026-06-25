@@ -17,7 +17,7 @@ CHARACTER_LIST = [(0, 128), (0, 136)]
 
 class Othello25:
     def __init__(self):
-        pyxel.init(SCREEN_SIZE, VIEW_HEIGHT, title="ATTACK3MOKU")
+        pyxel.init(SCREEN_SIZE, VIEW_HEIGHT, title="ATTACK5MOKU")
         try:
             pyxel.load("KAIYOU.pyxres")
         except:
@@ -290,7 +290,7 @@ class Othello25:
         if self.scene == "TITLE_START": return
         match self.scene:
             case "TITLE":
-                pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
+                pyxel.text(2, 5, "ATTACK5MOKU", pyxel.frame_count % 16)
                 pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
             case _:
                 for i in range(BOARD_SIZE + 1):
