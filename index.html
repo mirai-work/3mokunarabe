@@ -7,7 +7,6 @@
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
 <style>
-
 html,body{
     margin:0;
     width:100%;
@@ -16,7 +15,7 @@ html,body{
     background:black;
 }
 
-#bgvideo{
+#bgimage{
     position:fixed;
     left:0;
     top:0;
@@ -33,65 +32,46 @@ canvas{
     transform:translate(-50%,-50%);
     z-index:1;
 }
-
 </style>
 
 <script>
+let bgimage = null;
 
-let bgvideo = null;
-
-function playBG(filename, loop=true){
-    if(!bgvideo){
-        bgvideo = document.getElementById("bgvideo");
+function setBG(filename){
+    if(!bgimage){
+        bgimage = document.getElementById("bgimage");
     }
-
-    bgvideo.pause();
-    bgvideo.src = filename;
-    bgvideo.loop = loop;
-    bgvideo.load();
-
-    bgvideo.play().catch(()=>{});
+    bgimage.src = filename;
 }
 
 function showTitleBG(){
-    playBG("title.mp4", true);
+    setBG("title.jpg");
 }
 
 function showWinBG(){
-    playBG("win.mp4", false);
+    setBG("win.jpg");
 }
 
 function showLoseBG(){
-    playBG("lose.mp4", false);
+    setBG("lose.jpg");
 }
 
 function clearBG(){
-    if(!bgvideo){
-        bgvideo = document.getElementById("bgvideo");
+    if(!bgimage){
+        bgimage = document.getElementById("bgimage");
     }
-
-    bgvideo.pause();
-    bgvideo.removeAttribute("src");
-    bgvideo.load();
+    bgimage.removeAttribute("src");
 }
 
 window.onload = function(){
     showTitleBG();
 };
-
 </script>
-
 </head>
 
 <body>
 
-<video
-id="bgvideo"
-autoplay
-muted
-playsinline
-preload="auto">
-</video>
+<img id="bgimage" alt="background">
 
 <pyxel-play
 root="."
