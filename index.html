@@ -2,16 +2,16 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>ATTACK 3MOKU</title>
+    <title>ATTACK 5MOKU</title>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
     <style>
         html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
         #bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover; background-position: center; background-repeat: no-repeat;
-            z-index: 0; pointer-events: none;
+            background-size: cover; background-position: center;
+            background-repeat: no-repeat; z-index: 0;
         }
-        /* <pyxel-run>タグに対応したスタイル */
+        /* <pyxel-run>タグを中央配置 */
         pyxel-run {
             position: absolute; left: 50%; top: 50%;
             transform: translate(-50%, -50%); z-index: 1;
@@ -24,13 +24,14 @@
     <pyxel-run name="gomoku01.py"></pyxel-run>
 
     <script>
-        // 画像切り替え関数をwindowに紐付け
+        // 画像切り替え関数（.jpgまたは.pngに合わせてください）
         window.showTitleBG = () => document.getElementById("bg").style.backgroundImage = "url('title.jpg')";
         window.showWinBG   = () => document.getElementById("bg").style.backgroundImage = "url('win.jpg')";
         window.showLoseBG  = () => document.getElementById("bg").style.backgroundImage = "url('lose.jpg')";
         window.clearBG     = () => document.getElementById("bg").style.backgroundImage = "none";
-        
-        window.onload = () => window.showTitleBG();
+
+        // 読み込み完了時にタイトル背景を表示
+        window.onload = () => showTitleBG();
     </script>
 </body>
 </html>
