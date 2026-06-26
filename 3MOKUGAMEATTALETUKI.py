@@ -215,7 +215,7 @@ class Othello25:
             case (True, False): self.status = 1
             case (False, True): self.status = 2
             case _: self.status = 3
-        self.scene = "RESULT_START"; self.transition_timer = 300
+        self.scene = "RESULT_START"; self.transition_timer = 90
         if js:
             try:
                 match self.status:
@@ -321,3 +321,4 @@ class Othello25:
                             pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
+
