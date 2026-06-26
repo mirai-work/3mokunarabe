@@ -24,21 +24,20 @@ html,body{
     z-index:0;
 }
 
-/* ゲームを中央表示 */
 #game{
     position:absolute;
     left:50%;
     top:50%;
     transform:translate(-50%,-50%);
-    z-index:10;
+    z-index:1;
 }
 
-/* Pyxel背景を透過 */
 canvas{
     background:transparent !important;
 }
 </style>
 </head>
+
 <body>
 
 <div id="bg"></div>
@@ -51,72 +50,24 @@ canvas{
 
 const bg = document.getElementById("bg");
 
+window.showTitleBG = function(){
+    bg.style.backgroundImage = "url('title.jpg')";
+};
+
+window.showWinBG = function(){
+    bg.style.backgroundImage = "url('win.jpg')";
+};
+
+window.showLoseBG = function(){
+    bg.style.backgroundImage = "url('lose.jpg')";
+};
+
+window.clearBG = function(){
+    bg.style.backgroundImage = "none";
+};
+
 /* 起動直後 */
-bg.style.backgroundImage = "url('title.jpg')";
-
-let currentScene = "";
-let currentStatus = -1;
-
-function updateBG(){
-
-    const app = window.pyxel_app;
-
-    if(app){
-
-        if(
-            app.scene !== currentScene ||
-            app.status !== currentStatus
-        ){
-
-            currentScene = app.scene;
-            currentStatus = app.status;
-
-            console.log(
-                "scene:",
-                currentScene,
-                "status:",
-                currentStatus
-            );
-
-            switch(currentScene){
-
-                case "TITLE_START":
-                case "TITLE":
-                    bg.style.backgroundImage =
-                        "url('title.jpg')";
-                    break;
-
-                case "RESULT_START":
-
-                    switch(currentStatus){
-
-                        case 1:
-                            bg.style.backgroundImage =
-                                "url('win.jpg')";
-                            break;
-
-                        case 2:
-                            bg.style.backgroundImage =
-                                "url('lose.jpg')";
-                            break;
-
-                        default:
-                            bg.style.backgroundImage =
-                                "url('title.jpg')";
-                    }
-
-                    break;
-
-                default:
-                    bg.style.backgroundImage = "none";
-            }
-        }
-    }
-
-    requestAnimationFrame(updateBG);
-}
-
-updateBG();
+showTitleBG();
 
 </script>
 
