@@ -1,47 +1,102 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="utf-8">
-    <title>ATTACK 5MOKU</title>
-    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+<meta charset="utf-8">
+<title>ATTACK 5MOKU</title>
 
-    <style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        
-        #bg {
-            position: fixed;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            z-index: 0;
-        }
+<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
-        /* ゲーム画面を中央に配置 */
-        pyxel-run {
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-        }
-    </style>
+<style>
 
-    <script>
-        // 画像切り替え関数（.jpg形式）
-        window.showTitleBG = function(){ document.getElementById("bg").style.backgroundImage = "url('title.jpg')"; }
-        window.showWinBG   = function(){ document.getElementById("bg").style.backgroundImage = "url('win.jpg')"; }
-        window.showLoseBG  = function(){ document.getElementById("bg").style.backgroundImage = "url('lose.jpg')"; }
-        window.clearBG     = function(){ document.getElementById("bg").style.backgroundImage = "none"; }
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:black;
+}
 
-        window.onload = function(){ showTitleBG(); }
-    </script>
+#bgvideo{
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    z-index:0;
+}
+
+canvas{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:1;
+}
+
+</style>
+
+<script>
+
+let bgvideo = null;
+
+function playBG(filename, loop=true){
+    if(!bgvideo){
+        bgvideo = document.getElementById("bgvideo");
+    }
+
+    bgvideo.pause();
+    bgvideo.src = filename;
+    bgvideo.loop = loop;
+    bgvideo.load();
+
+    bgvideo.play().catch(()=>{});
+}
+
+function showTitleBG(){
+    playBG("title.mp4", true);
+}
+
+function showWinBG(){
+    playBG("win.mp4", false);
+}
+
+function showLoseBG(){
+    playBG("lose.mp4", false);
+}
+
+function clearBG(){
+    if(!bgvideo){
+        bgvideo = document.getElementById("bgvideo");
+    }
+
+    bgvideo.pause();
+    bgvideo.removeAttribute("src");
+    bgvideo.load();
+}
+
+window.onload = function(){
+    showTitleBG();
+};
+
+</script>
+
 </head>
+
 <body>
 
-    <div id="bg"></div>
+<video
+id="bgvideo"
+autoplay
+muted
+playsinline
+preload="auto">
+</video>
 
-    <pyxel-play name="3MOKUGAMEATTALETUKI.py"></pyxel-play>
+<pyxel-play
+root="."
+name="3MOKUGAMEATTALETUKI.py">
+</pyxel-play>
 
 </body>
 </html>
