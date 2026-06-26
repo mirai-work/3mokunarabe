@@ -36,3 +36,24 @@ body{
 
 </body>
 </html>
+<script>
+window.addEventListener("load", () => {
+
+    setTimeout(() => {
+
+        const canvas = document.querySelector("canvas");
+
+        if(canvas){
+
+            canvas.style.background = "transparent";
+            canvas.style.width = "46px";
+            canvas.style.height = "56px";
+            canvas.style.position = "relative";
+            canvas.style.zIndex = "10";
+
+        }
+
+    },1000);
+
+});
+</script>
