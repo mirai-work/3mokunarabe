@@ -215,7 +215,7 @@ class Othello25:
             case (True, False): self.status = 1
             case (False, True): self.status = 2
             case _: self.status = 3
-        self.scene = "RESULT_START"; self.transition_timer = 90
+        self.scene = "RESULT_START"; self.transition_timer = 300
         if js:
             try:
                 match self.status:
