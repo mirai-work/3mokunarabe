@@ -196,3 +196,4 @@ class Othello25:
                     pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
+
