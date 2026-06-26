@@ -68,7 +68,7 @@ class Othello25:
         self.cursor_x = 2; self.cursor_y = 2
         pyxel.stop()
         if js:
-            try: js.showTitleBG()
+            try: js.window.showTitleBG()
             except: pass
 
     def get_flips(self, x, y, p):
@@ -224,8 +224,8 @@ class Othello25:
         if js:
             try:
                 match self.status:
-                    case 1: js.showWinBG()
-                    case 2: js.showLoseBG()
+                    case 1: js.window.showWinBG()
+                    case 2: js.window.showLoseBG()
             except: pass
         pyxel.stop()
         pyxel.playm(2 if self.status == 1 else 3, loop=False)
