@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -7,63 +8,33 @@
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
 <style>
-
 html,body{
     margin:0;
     width:100%;
     height:100%;
     overflow:hidden;
-    background:black;
+    background:#000;
 }
 
 #bg{
     position:fixed;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
+    inset:0;
     background-size:cover;
-    background-position:center center;
+    background-position:center;
     background-repeat:no-repeat;
     z-index:0;
+    pointer-events:none;
+    transition:background-image .3s;
 }
 
-canvas{
+pyxel-run{
     position:absolute;
     left:50%;
     top:50%;
     transform:translate(-50%,-50%);
     z-index:1;
 }
-
 </style>
-
-<script>
-
-function showTitleBG(){
-    document.getElementById("bg").style.backgroundImage =
-    "url('title.png')";
-}
-
-function showWinBG(){
-    document.getElementById("bg").style.backgroundImage =
-    "url('win.png')";
-}
-
-function showLoseBG(){
-    document.getElementById("bg").style.backgroundImage =
-    "url('lose.png')";
-}
-
-function clearBG(){
-    document.getElementById("bg").style.backgroundImage = "none";
-}
-
-window.onload = function(){
-    showTitleBG();
-}
-
-</script>
 
 </head>
 
@@ -71,10 +42,66 @@ window.onload = function(){
 
 <div id="bg"></div>
 
-<pyxel-play
-root="."
-name="gomoku01.py">
-</pyxel-play>
+<pyxel-run name="gomoku01.py"></pyxel-run>
+
+<script>
+
+const bg = document.getElementById("bg");
+let currentImage = "";
+
+function setBG(image){
+    if(currentImage !== image){
+        currentImage = image;
+        bg.style.backgroundImage =
+            image ? `url('${image}')` : "none";
+    }
+}
+
+function updateBG(){
+
+    if(window.pyxel_app){
+
+        const scene = window.pyxel_app.scene;
+        const status = window.pyxel_app.status;
+
+        switch(scene){
+
+            case "TITLE_START":
+            case "TITLE":
+                setBG("title.jpg");
+                break;
+
+            case "RESULT_START":
+
+                switch(status){
+
+                    case 1:
+                        setBG("win.jpg");
+                        break;
+
+                    case 2:
+                        setBG("lose.jpg");
+                        break;
+
+                    case 3:
+                        setBG("draw.jpg");
+                        break;
+                }
+                break;
+
+            case "GAME":
+            case "ATTACK_CHANCE":
+                setBG("");
+                break;
+        }
+    }
+
+    requestAnimationFrame(updateBG);
+}
+
+updateBG();
+
+</script>
 
 </body>
 </html>
