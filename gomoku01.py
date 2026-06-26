@@ -17,7 +17,7 @@ CHARACTER_LIST = [(0, 128), (0, 136)]
 
 class Othello25:
     def __init__(self):
-        pyxel.init(SCREEN_SIZE, VIEW_HEIGHT, title="ATTACK5MOKU")
+        pyxel.init(SCREEN_SIZE, VIEW_HEIGHT, title="ATTACK　5MOKU")
         try:
             pyxel.load("KAIYOU.pyxres")
         except:
