@@ -1,57 +1,107 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
-    <meta charset="utf-8">
-    <title>ATTACK 5MOKU</title>
-    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-    <style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
-        
-        /* ゲーム画面（Pyxel）の設定 */
-        pyxel-run {
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1; /* ゲーム画面は「1」 */
-        }
+<meta charset="utf-8">
+<title>ATTACK 5MOKU</title>
 
-        /* 背景（画像）設定 */
-        #bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 2; /* ゲーム画面（1）より大きい「2」を指定して手前に表示 */
-            pointer-events: none; /* 重要：クリックがゲーム画面に届くようにする */
-            transition: background-image 0.5s;
-        }
-    </style>
+<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+
+<style>
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#000;
+}
+
+#bg{
+    position:fixed;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    z-index:0;
+    pointer-events:none;
+    transition:background-image .3s;
+}
+
+pyxel-run{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:1;
+}
+</style>
+
 </head>
+
 <body>
 
-    <pyxel-run name="gomoku01.py"></pyxel-run>
-    <div id="bg"></div>
+<div id="bg"></div>
 
-    <script>
-        setInterval(() => {
-            const bg = document.getElementById("bg");
-            if (window.pyxel && window.pyxel.app) {
-                const scene = window.pyxel.app.scene;
-                const status = window.pyxel.app.status;
-                
-                // 画像を表示・切り替え
-                if (scene === "TITLE") {
-                    bg.style.backgroundImage = "url('title.jpg')";
-                } else if (scene === "RESULT_START") {
-                    if (status === 1) bg.style.backgroundImage = "url('win.jpg')";
-                    else if (status === 2) bg.style.backgroundImage = "url('lose.jpg')";
-                } else {
-                    bg.style.backgroundImage = "none"; // ゲーム中は画像を消す
+<pyxel-run name="gomoku01.py"></pyxel-run>
+
+<script>
+
+const bg = document.getElementById("bg");
+let currentImage = "";
+
+function setBG(image){
+    if(currentImage !== image){
+        currentImage = image;
+        bg.style.backgroundImage =
+            image ? `url('${image}')` : "none";
+    }
+}
+
+function updateBG(){
+
+    if(window.pyxel_app){
+
+        const scene = window.pyxel_app.scene;
+        const status = window.pyxel_app.status;
+
+        switch(scene){
+
+            case "TITLE_START":
+            case "TITLE":
+                setBG("title.jpg");
+                break;
+
+            case "RESULT_START":
+
+                switch(status){
+
+                    case 1:
+                        setBG("win.jpg");
+                        break;
+
+                    case 2:
+                        setBG("lose.jpg");
+                        break;
+
+                    case 3:
+                        setBG("draw.jpg");
+                        break;
                 }
-            }
-        }, 500);
-    </script>
+                break;
+
+            case "GAME":
+            case "ATTACK_CHANCE":
+                setBG("");
+                break;
+        }
+    }
+
+    requestAnimationFrame(updateBG);
+}
+
+updateBG();
+
+</script>
+
 </body>
 </html>
