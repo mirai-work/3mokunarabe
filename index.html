@@ -5,26 +5,24 @@
     <title>ATTACK 5MOKU</title>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
     <style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
         
-        /* 背景画像を表示するための設定 */
+        /* 背景画像を強制的に一番下に表示する */
         #bg {
             position: fixed;
-            left: 0; top: 0;
+            top: 0; left: 0;
             width: 100vw; height: 100vh;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            z-index: 0;
-            background-color: #333; /* 画像が出ない時でも確認できるように色をつける */
+            z-index: -1; /* ゲーム画面より後ろに配置 */
         }
 
-        /* ゲーム画面を中央に配置 */
+        /* Pyxelの画面を中央へ */
         pyxel-run {
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
+            display: block;
+            margin: 0 auto;
+            margin-top: 10vh;
         }
     </style>
 </head>
@@ -34,51 +32,22 @@
 
     <pyxel-run name="gomoku01.py"></pyxel-run>
 
-  <script>
-const bg = document.getElementById("bg");
-
-setInterval(() => {
-
-    if (!window.pyxel_app) return;
-
-    const scene = window.pyxel_app.scene;
-    const status = window.pyxel_app.status;
-
-    console.log(scene, status);
-
-    let targetUrl = "";
-
-    switch (scene) {
-
-        case "TITLE_START":
-        case "TITLE":
-            targetUrl = "title.jpg";
-            break;
-
-        case "RESULT_START":
-
-            if (status === 1) {
-                targetUrl = "win.jpg";
+    <script>
+        setInterval(() => {
+            const bg = document.getElementById("bg");
+            if (window.pyxel && window.pyxel.app) {
+                const scene = window.pyxel.app.scene;
+                const status = window.pyxel.app.status;
+                
+                // シーンに合わせて画像を設定
+                if (scene === "TITLE") {
+                    bg.style.backgroundImage = "url('title.jpg')";
+                } else if (scene === "RESULT_START") {
+                    if (status === 1) bg.style.backgroundImage = "url('win.jpg')";
+                    else if (status === 2) bg.style.backgroundImage = "url('lose.jpg')";
+                }
             }
-            else if (status === 2) {
-                targetUrl = "lose.jpg";
-            }
-
-            break;
-
-        default:
-            targetUrl = "";
-            break;
-    }
-
-    if (targetUrl) {
-        bg.style.backgroundImage = `url('${targetUrl}')`;
-    }
-    else {
-        bg.style.backgroundImage = "";
-    }
-
-}, 100);
-</script>
+        }, 500);
+    </script>
 </body>
 </html>
