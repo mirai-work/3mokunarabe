@@ -1,71 +1,99 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="utf-8">
-    <title>ATTACK 5MOKU</title>
-    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+<meta charset="utf-8">
+<title>ATTACK 5MOKU</title>
 
-    <style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
-        
-        #bg {
-            position: fixed;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            z-index: -1;
-            transition: background-image 0.5s ease; /* 切り替えを滑らかに */
-        }
+<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 
-        /* Pyxelの実行エリアを透明化 */
-        pyxel-run {
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            background: transparent !important;
-            z-index: 1;
-        }
-        canvas { background: transparent !important; }
-    </style>
+<style>
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:black;
+}
 
-    <script>
-        // 背景切り替え関数
-        function showTitleBG() {
-            document.getElementById("bg").style.backgroundImage = "url('title.jpg')";
-            console.log("動いてる: タイトル画面へ切り替え");
-        }
+#bg{
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+    z-index:-1;
+}
 
-        function showWinBG() {
-            document.getElementById("bg").style.backgroundImage = "url('win.jpg')";
-            console.log("動いてる: 勝利画面へ切り替え");
-        }
+pyxel-run{
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%,-50%) !important;
+    z-index:1;
+}
 
-        function showLoseBG() {
-            document.getElementById("bg").style.backgroundImage = "url('lose.jpg')";
-            console.log("動いてる: 敗北画面へ切り替え");
-        }
+canvas{
+    background:transparent !important;
+}
+</style>
 
-        function clearBG() {
-            document.getElementById("bg").style.backgroundImage = "none";
-            console.log("動いてる: 背景をクリア");
-        }
+<script>
 
-        // 初期化
-        window.onload = () => {
-            showTitleBG();
-            
-            // 動作確認用：定期的にコンソールに状態を表示
-            setInterval(() => {
-                console.log("システム稼働中: " + new Date().toLocaleTimeString());
-            }, 5000);
-        };
-    </script>
+function setBG(file){
+    const bg = document.getElementById("bg");
+
+    console.log("背景変更:", file);
+
+    const img = new Image();
+
+    img.onload = function(){
+        console.log("画像読込成功:", file);
+        bg.style.backgroundImage = `url("${file}")`;
+    };
+
+    img.onerror = function(){
+        console.error("画像読込失敗:", file);
+    };
+
+    img.src = file;
+}
+
+function showTitleBG(){
+    setBG("title.jpg");
+}
+
+function showWinBG(){
+    setBG("win.jpg");
+}
+
+function showLoseBG(){
+    setBG("lose.jpg");
+}
+
+function clearBG(){
+    document.getElementById("bg").style.backgroundImage = "none";
+}
+
+window.showTitleBG = showTitleBG;
+window.showWinBG = showWinBG;
+window.showLoseBG = showLoseBG;
+window.clearBG = clearBG;
+
+window.onload = function(){
+    showTitleBG();
+};
+
+</script>
 </head>
 
 <body>
-    <div id="bg"></div>
 
-    <pyxel-run root="." name="gomoku01.py"></pyxel-run>
+<div id="bg"></div>
+
+<pyxel-run root="." name="gomoku01.py"></pyxel-run>
+
 </body>
 </html>
