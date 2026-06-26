@@ -34,30 +34,51 @@
 
     <pyxel-run name="gomoku01.py"></pyxel-run>
 
-    <script>
-        // デバッグ用：画像が正しくセットされたか確認するためのログ
-        const bg = document.getElementById("bg");
+  <script>
+const bg = document.getElementById("bg");
 
-        // 状態監視
-        setInterval(() => {
-            if (window.pyxel && window.pyxel.app) {
-                const scene = window.pyxel.app.scene;
-                const status = window.pyxel.app.status;
-                
-                let targetUrl = "";
-                if (scene === "TITLE") {
-                    targetUrl = "title.jpg";
-                } else if (scene === "RESULT_START") {
-                    if (status === 1) targetUrl = "win.jpg";
-                    else if (status === 2) targetUrl = "lose.jpg";
-                }
+setInterval(() => {
 
-                if (targetUrl && bg.style.backgroundImage !== `url("${targetUrl}")`) {
-                    bg.style.backgroundImage = `url('${targetUrl}')`;
-                    console.log("背景画像を変更しました:", targetUrl);
-                }
+    if (!window.pyxel_app) return;
+
+    const scene = window.pyxel_app.scene;
+    const status = window.pyxel_app.status;
+
+    console.log(scene, status);
+
+    let targetUrl = "";
+
+    switch (scene) {
+
+        case "TITLE_START":
+        case "TITLE":
+            targetUrl = "title.jpg";
+            break;
+
+        case "RESULT_START":
+
+            if (status === 1) {
+                targetUrl = "win.jpg";
             }
-        }, 500);
-    </script>
+            else if (status === 2) {
+                targetUrl = "lose.jpg";
+            }
+
+            break;
+
+        default:
+            targetUrl = "";
+            break;
+    }
+
+    if (targetUrl) {
+        bg.style.backgroundImage = `url('${targetUrl}')`;
+    }
+    else {
+        bg.style.backgroundImage = "";
+    }
+
+}, 100);
+</script>
 </body>
 </html>
