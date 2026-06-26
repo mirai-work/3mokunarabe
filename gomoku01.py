@@ -1,5 +1,6 @@
 import pyxel
 import random
+import gomoku01
 
 try:
     import js
