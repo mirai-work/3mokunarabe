@@ -7,7 +7,7 @@
     <style>
         html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
         
-        /* 背景画像 */
+        /* 背景画像レイヤー */
         #bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-size: cover; background-position: center;
@@ -15,11 +15,13 @@
             transition: background-image 0.5s;
         }
 
-        /* ゲーム画面（最初は非表示にしておく） */
+        /* PyxelのCanvasを透過させ、背景を見せる */
+        canvas { background-color: transparent !important; }
+
+        /* ゲームコンテナ */
         #game-container {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%); z-index: 1;
-            display: none; 
         }
     </style>
 </head>
@@ -36,23 +38,22 @@
         const gameContainer = document.getElementById("game-container");
 
         function updateDisplay() {
-            // Python側の状態を監視（window.pyxel_appが準備できるまで待つ）
             if (window.pyxel_app) {
                 const scene = window.pyxel_app.scene;
                 const status = window.pyxel_app.status;
 
+                // 状態に応じた背景切り替え
                 if (scene === "TITLE" || scene === "TITLE_START") {
                     bg.style.backgroundImage = "url('title.jpg')";
-                    gameContainer.style.display = "none"; // ゲーム画面を消す
                 } 
                 else if (scene === "RESULT_START") {
-                    gameContainer.style.display = "none"; // ゲーム画面を消す
                     if (status === 1) bg.style.backgroundImage = "url('win.jpg')";
                     else if (status === 2) bg.style.backgroundImage = "url('lose.jpg')";
+                    else bg.style.backgroundImage = "url('title.jpg')"; // 引き分け等はデフォルト
                 } 
                 else {
-                    bg.style.backgroundImage = "none";    // ゲーム中は背景を消す
-                    gameContainer.style.display = "block"; // ゲーム画面を表示
+                    // ゲームプレイ中は背景画像を消す（必要であれば透明にする）
+                    bg.style.backgroundImage = "none";
                 }
             }
             requestAnimationFrame(updateDisplay);
