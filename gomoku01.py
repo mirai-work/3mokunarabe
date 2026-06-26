@@ -24,12 +24,12 @@ class Othello25:
             pass
         self.init_sound()
         pyxel.mouse(True)
-        self.reset_game()
         if js:
             try:
                 js.window.pyxel_app = self
             except:
-                pass
+                pass 
+        self.reset_game()
         pyxel.run(self.update, self.draw)
 
     def is_decision_pressed(self):
