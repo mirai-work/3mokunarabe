@@ -247,8 +247,10 @@ class Othello25:
                         case "TITLE_START": self.scene = "TITLE"; pyxel.playm(0, loop=True)
                         case _: self.reset_game()
                     if js:
-                        try: js.clearBG()
-                        except: pass
+                        try:
+                            js.window.clearBG()
+                        except:
+                            pass
             case "TITLE":
                 match True:
                     case _ if pyxel.btnp(pyxel.KEY_1): self.difficulty = 1; self.scene = "GAME"; pyxel.playm(1, loop=True)
