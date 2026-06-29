@@ -253,13 +253,14 @@ class Othello25:
                     pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
                     c = 7 if pyxel.frame_count % 10 < 5 else 0
                     pyxel.text(10, 35, "DRAW!", c)
-            else:
+           else:
                 p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
                 y_pos = SCREEN_SIZE + 2
-                pyxel.text(2, y_pos, f"YOU:{p1}", 7); pyxel.text(25, y_pos, f"CPU:{cpu}", 7)
+                # YOUは1番の石（色番号:128/136のインデックスに対応）、CPUは2番の石の色へ変更
+                # CHARACTER_LISTの定義順(p1=1, p2=2)に基づき、視認性の良い色を指定します
+                pyxel.text(2, y_pos, f"YOU:{p1}", 11); pyxel.text(25, y_pos, f"CPU:{cpu}", 10)
                 if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
                 if self.scene == "ATTACK_CHANCE":
                     c = 10 if pyxel.frame_count % 10 < 5 else 7
                     pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
-
 Othello25()
