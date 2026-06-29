@@ -24,16 +24,13 @@ class Othello25:
             pass
         self.init_sound()
         pyxel.mouse(True)
+        # 初期状態を設定してから、最初のタイトル画像を表示する
         self.reset_game()
         pyxel.run(self.update, self.draw)
 
     def call_js(self, func_name):
-        if js is not None:
-            # window経由で呼び出すとブラウザ環境で安定します
-            if hasattr(js.window, func_name):
-                getattr(js.window, func_name)()
-            elif hasattr(js, func_name):
-                getattr(js, func_name)()
+        if js is not None and hasattr(js.window, func_name):
+            getattr(js.window, func_name)()
 
     def is_decision_pressed(self):
         return pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A) or pyxel.btnp(pyxel.KEY_SPACE)
@@ -66,21 +63,17 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        
         self.scene = "TITLE" 
         self.transition_timer = 0
         self.cursor_x = 2; self.cursor_y = 2
         pyxel.stop()
-        
-        # タイトル画面へ戻る際は全ての前面画像をクリアし、タイトル画像を表示
-        self.call_js("clearBG")
+        # 画像表示を強制的に要求
         self.call_js("showTitleBG")
 
     def start_game(self, difficulty_level, music_id):
         self.difficulty = difficulty_level
         self.scene = "GAME"
         pyxel.playm(music_id, loop=True)
-        # ゲーム開始時：タイトル画像を消去
         self.call_js("clearBG")
 
     def get_flips(self, x, y, p):
@@ -187,28 +180,26 @@ class Othello25:
         p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
         self.status = 1 if p1 > cpu else 2 if cpu > p1 else 3
         self.scene = "RESULT_START"
-        self.transition_timer = 90
+        self.transition_timer = 120
         pyxel.stop(); pyxel.playm(2 if self.status == 1 else 3, loop=False)
-        
-        # リザルト画面で勝敗に応じたJS画像呼び出し
         if self.status == 1: self.call_js("showWinBG")
         elif self.status == 2: self.call_js("showLoseBG")
 
     def update(self):
-        if self.pass_timer > 0: self.pass_timer -= 1
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP): self.cursor_y = max(0, self.cursor_y - 1)
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): self.cursor_y = min(BOARD_SIZE - 1, self.cursor_y + 1)
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): self.cursor_x = max(0, self.cursor_x - 1)
-        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
-        
         if self.scene == "TITLE":
             if pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
             elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
             elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
             elif self.is_decision_pressed(): self.start_game(2, 4)
             return
+
         if self.pass_timer > 0: self.pass_timer -= 1
-        elif self.scene == "GAME":
+        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP): self.cursor_y = max(0, self.cursor_y - 1)
+        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): self.cursor_y = min(BOARD_SIZE - 1, self.cursor_y + 1)
+        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): self.cursor_x = max(0, self.cursor_x - 1)
+        if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
+        
+        if self.scene == "GAME":
             if self.turn == 1 and self.is_decision_pressed():
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
                 if 0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.get_flips(mx, my, 1):
@@ -232,33 +223,27 @@ class Othello25:
                 self.reset_game()
 
     def draw(self):
+        if self.scene == "TITLE": return
         pyxel.cls(0)
-        if self.scene == "TITLE":
-            pyxel.text(2, 5, "ATTACK5MOKU", pyxel.frame_count % 16)
-            pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
+        for i in range(BOARD_SIZE + 1):
+            pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
+            pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
+        for y in range(BOARD_SIZE):
+            for x in range(BOARD_SIZE):
+                if self.grids[y][x]:
+                    u, v = CHARACTER_LIST[self.grids[y][x] - 1]
+                    pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
+        if self.turn == 1: pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
+        if self.scene == "RESULT_START":
+            if self.status == 3:
+                pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
+                pyxel.text(10, 35, "DRAW!", 7)
         else:
-            for i in range(BOARD_SIZE + 1):
-                pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
-                pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
-            for y in range(BOARD_SIZE):
-                for x in range(BOARD_SIZE):
-                    if self.grids[y][x]:
-                        u, v = CHARACTER_LIST[self.grids[y][x] - 1]
-                        pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
-            if self.turn == 1: pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
-            
-            if self.scene == "RESULT_START":
-                if self.status == 3:
-                    pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
-                    c = 7 if pyxel.frame_count % 10 < 5 else 0
-                    pyxel.text(10, 35, "DRAW!", c)
-            else:
-                p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
-                y_pos = SCREEN_SIZE + 2
-                pyxel.text(2, y_pos, f"YOU{p1}", 11); pyxel.text(25, y_pos, f"CPU{cpu}", 8)
-                if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
-                if self.scene == "ATTACK_CHANCE":
-                    c = 10 if pyxel.frame_count % 10 < 5 else 7
-                    pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
+            p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
+            y_pos = SCREEN_SIZE + 2
+            pyxel.text(2, y_pos, f"YOU{p1}", 11); pyxel.text(25, y_pos, f"CPU{cpu}", 8)
+            if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
+            if self.scene == "ATTACK_CHANCE":
+                pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, 10); pyxel.text(2, 20, "ATTACK!", 10)
 
 Othello25()
