@@ -233,11 +233,12 @@ class Othello25:
     def draw(self):
         pyxel.cls(0)
         
-        # TITLE や RESULT_START 中は画像が手前に出ているので、後ろでひっそりと文字を描画（見えなくてもOK）
+        # タイトルやリザルト表示中（手前に画像がある時）は後ろで描画を待機
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
         else:
+            # 盤面の描画
             for i in range(BOARD_SIZE + 1):
                 pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
                 pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
@@ -246,20 +247,31 @@ class Othello25:
                     if self.grids[y][x]:
                         u, v = CHARACTER_LIST[self.grids[y][x] - 1]
                         pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
-            if self.turn == 1: pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
             
+            # カーソルの描画
+            if self.turn == 1: 
+                pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
+            
+            # リザルト画面
             if self.scene == "RESULT_START":
                 if self.status == 3:
-                    pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
+                    pyxel.circ(23, 23, 8, 7)
+                    pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
                     c = 7 if pyxel.frame_count % 10 < 5 else 0
                     pyxel.text(10, 35, "DRAW!", c)
             else:
-                p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
+                # YOU と CPU のスコア表示（色を石の色に合わせる）
+                p1 = sum(row.count(1) for row in self.grids)
+                cpu = sum(row.count(2) for row in self.grids)
                 y_pos = SCREEN_SIZE + 2
-                # YOUは1番の石（色番号:128/136のインデックスに対応）、CPUは2番の石の色へ変更
-                # CHARACTER_LISTの定義順(p1=1, p2=2)に基づき、視認性の良い色を指定します
-                pyxel.text(2, y_pos, f"YOU:{p1}", 11); pyxel.text(25, y_pos, f"CPU:{cpu}", 10)
-                if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
+                
+                # 色番号 11(石の色1) と 10(石の色2) を使用
+                pyxel.text(2, y_pos, f"YOU:{p1}", 11)
+                pyxel.text(25, y_pos, f"CPU:{cpu}", 10)
+                
+                if self.pass_timer > 0: 
+                    pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
+                
                 if self.scene == "ATTACK_CHANCE":
                     c = 10 if pyxel.frame_count % 10 < 5 else 7
                     pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
