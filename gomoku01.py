@@ -36,12 +36,14 @@ class Othello25:
         return pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A) or pyxel.btnp(pyxel.KEY_SPACE)
 
     def init_sound(self):
+        # ... (初期化処理は同じ) ...
         pyxel.sound(0).set("e2e2", "n", "7", "f", 5)
         pyxel.sound(1).set("g3g3 c4", "p", "7", "v", 10)
         pyxel.sound(2).set("c4e4g4 c4 r c4", "p", "7", "v", 10)
         pyxel.sound(10).set("c3 e3 g3 c4  e3 g3 c4 e4", "t", "4", "n", 25)
         pyxel.sound(11).set("c2 g2 c2 g2  c2 g2 c2 g2", "s", "4", "n", 25)
         pyxel.music(0).set([10], [11], [], [])
+        # ... 以下省略(元のコードと同様) ...
         pyxel.sound(12).set("a2 c3 e3 a3  g2 b2 d3 g3", "t", "5", "n", 25)
         pyxel.sound(13).set("a1 e2 a1 e2  g1 d2 g1 d2", "p", "5", "n", 25)
         pyxel.music(1).set([12], [13], [], [])
@@ -63,10 +65,10 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        self.scene = "TITLE" 
-        self.transition_timer = 0
+        # ステージを「背景表示中」に設定
+        self.scene = "TITLE_WAIT" 
+        self.title_wait_timer = 30 # 背景が表示されるのを待つ時間
         self.cursor_x = 2; self.cursor_y = 2
-        self.title_wait = 30
         pyxel.stop()
         self.call_js("showTitleBG")
 
@@ -76,6 +78,7 @@ class Othello25:
         pyxel.playm(music_id, loop=True)
         self.call_js("clearBG")
 
+    # ... (get_flips, apply_move_logic, evaluate_board, minimax, check_valid, cpu_move, check_attack_chance_trigger, cpu_attack, change_turn, check_game_over は元のまま) ...
     def get_flips(self, x, y, p):
         if self.grids[y][x] != 0: return []
         flips = []
@@ -192,13 +195,19 @@ class Othello25:
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): self.cursor_x = max(0, self.cursor_x - 1)
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
         
-        if self.scene == "TITLE":
-            if self.title_wait > 0:
-                self.title_wait -= 1
-            elif pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
+        # タイトル待機フェーズ
+        if self.scene == "TITLE_WAIT":
+            self.title_wait_timer -= 1
+            if self.title_wait_timer <= 0:
+                self.scene = "TITLE_MENU"
+        
+        # タイトルメニューフェーズ
+        elif self.scene == "TITLE_MENU":
+            if pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
             elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
             elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
             elif self.is_decision_pressed(): self.start_game(2, 4)
+
         elif self.scene == "GAME":
             if self.turn == 1 and self.is_decision_pressed():
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
@@ -221,17 +230,20 @@ class Othello25:
                 self.reset_game()
 
     def draw(self):
-        # タイトル時はcls(0)せず、背景を見せるために塗りつぶさない
-        if self.scene != "TITLE":
+        # 起動直後の数フレームは描画をスキップ
+        if pyxel.frame_count < 10: return
+
+        # タイトル画面（WAITまたはMENU）の時は画面をクリアしない（背景を表示させるため）
+        if self.scene != "TITLE_WAIT" and self.scene != "TITLE_MENU":
             pyxel.cls(0)
         
-        if self.scene == "TITLE":
-            # タイトル画面のテキスト描画
-            pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
+        # タイトルメニューの時だけ文字を描画
+        if self.scene == "TITLE_MENU":
             pyxel.text(5, 18, "LV1 (Press 1)", 11)
             pyxel.text(5, 26, "LV2 (Press 2)", 10)
             pyxel.text(5, 34, "LV3 (Press 3)", 8)
-        else:
+            
+        elif self.scene == "GAME" or self.scene == "ATTACK_CHANCE" or self.scene == "RESULT_START":
             for i in range(BOARD_SIZE + 1):
                 pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
                 pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
