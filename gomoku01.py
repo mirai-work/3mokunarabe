@@ -66,6 +66,7 @@ class Othello25:
         self.scene = "TITLE" 
         self.transition_timer = 0
         self.cursor_x = 2; self.cursor_y = 2
+        self.title_wait = 30
         pyxel.stop()
         self.call_js("showTitleBG")
 
@@ -192,7 +193,9 @@ class Othello25:
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
         
         if self.scene == "TITLE":
-            if pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
+            if self.title_wait > 0:
+                self.title_wait -= 1
+            elif pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
             elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
             elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
             elif self.is_decision_pressed(): self.start_game(2, 4)
