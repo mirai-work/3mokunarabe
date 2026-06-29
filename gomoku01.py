@@ -255,7 +255,7 @@ class Othello25:
             else:
                 p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
                 y_pos = SCREEN_SIZE + 2
-                pyxel.text(2, y_pos, f"YOU:{p1}", 11); pyxel.text(25, y_pos, f"CPU:{cpu}", 8)
+                pyxel.text(2, y_pos, f"YOU{p1}", 11); pyxel.text(25, y_pos, f"CPU{cpu}", 8)
                 if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
                 if self.scene == "ATTACK_CHANCE":
                     c = 10 if pyxel.frame_count % 10 < 5 else 7
