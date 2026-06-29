@@ -28,9 +28,12 @@ class Othello25:
         pyxel.run(self.update, self.draw)
 
     def call_js(self, func_name):
-        if js and hasattr(js, func_name):
-            try: getattr(js, func_name)()
-            except: pass
+        if js is not None:
+            # window経由で呼び出すとブラウザ環境で安定します
+            if hasattr(js.window, func_name):
+                getattr(js.window, func_name)()
+            elif hasattr(js, func_name):
+                getattr(js, func_name)()
 
     def is_decision_pressed(self):
         return pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A) or pyxel.btnp(pyxel.KEY_SPACE)
@@ -203,7 +206,8 @@ class Othello25:
             elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
             elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
             elif self.is_decision_pressed(): self.start_game(2, 4)
-            
+            return
+        if self.pass_timer > 0: self.pass_timer -= 1
         elif self.scene == "GAME":
             if self.turn == 1 and self.is_decision_pressed():
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
