@@ -63,11 +63,22 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        self.scene = "TITLE_START"
-        self.transition_timer = 90
+        
+        self.scene = "TITLE" 
+        self.transition_timer = 0
         self.cursor_x = 2; self.cursor_y = 2
         pyxel.stop()
+        
+        # タイトル画面に戻った時に、手前に title.jpg を表示する
         self.call_js("showTitleBG")
+
+    def start_game(self, difficulty_level, music_id):
+        """ゲーム開始時の処理をまとめた関数"""
+        self.difficulty = difficulty_level
+        self.scene = "GAME"
+        pyxel.playm(music_id, loop=True)
+        # ★ ここで JS を呼び出し、手前の画像を消してゲーム画面を見せる！
+        self.call_js("clearBG")
 
     def get_flips(self, x, y, p):
         if self.grids[y][x] != 0: return []
@@ -174,10 +185,13 @@ class Othello25:
     def check_game_over(self):
         p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
         self.status = 1 if p1 > cpu else 2 if cpu > p1 else 3
-        self.scene = "RESULT_START"; self.transition_timer = 90
+        self.scene = "RESULT_START"
+        self.transition_timer = 90
+        pyxel.stop(); pyxel.playm(2 if self.status == 1 else 3, loop=False)
+        
+        # リザルト画面になったら、前面に画像を表示
         if self.status == 1: self.call_js("showWinBG")
         elif self.status == 2: self.call_js("showLoseBG")
-        pyxel.stop(); pyxel.playm(2 if self.status == 1 else 3, loop=False)
 
     def update(self):
         if self.pass_timer > 0: self.pass_timer -= 1
@@ -186,16 +200,13 @@ class Othello25:
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): self.cursor_x = max(0, self.cursor_x - 1)
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
         
-        if self.scene in ["TITLE_START", "RESULT_START"]:
-            self.transition_timer -= 1
-            if self.transition_timer <= 0:
-                if self.scene == "TITLE_START": self.scene = "TITLE"; pyxel.playm(0, loop=True); self.call_js("clearBG")
-                else: self.reset_game()
-        elif self.scene == "TITLE":
-            if pyxel.btnp(pyxel.KEY_1): self.difficulty = 1; self.scene = "GAME"; pyxel.playm(1, loop=True)
-            elif pyxel.btnp(pyxel.KEY_2): self.difficulty = 2; self.scene = "GAME"; pyxel.playm(4, loop=True)
-            elif pyxel.btnp(pyxel.KEY_3): self.difficulty = 3; self.scene = "GAME"; pyxel.playm(5, loop=True)
-            elif self.is_decision_pressed(): self.difficulty = 2; self.scene = "GAME"; pyxel.playm(4, loop=True)
+        if self.scene == "TITLE":
+            # 入力があれば start_game を呼んで画像を消し、ゲームを始める
+            if pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
+            elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
+            elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
+            elif self.is_decision_pressed(): self.start_game(2, 4)
+            
         elif self.scene == "GAME":
             if self.turn == 1 and self.is_decision_pressed():
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
@@ -204,6 +215,7 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_move()
+                
         elif self.scene == "ATTACK_CHANCE":
             if self.turn == 1 and self.is_decision_pressed():
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
@@ -212,10 +224,16 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_attack()
+                
+        elif self.scene == "RESULT_START":
+            self.transition_timer -= 1
+            if self.transition_timer <= 0:
+                self.reset_game()
 
     def draw(self):
         pyxel.cls(0)
-        if self.scene == "TITLE_START": return
+        
+        # TITLE や RESULT_START 中は画像が手前に出ているので、後ろでひっそりと文字を描画（見えなくてもOK）
         if self.scene == "TITLE":
             pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
             pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
