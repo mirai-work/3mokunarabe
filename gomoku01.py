@@ -1,7 +1,5 @@
 import pyxel
 import random
-import copy
-import math
 
 try:
     import js
@@ -10,6 +8,7 @@ except:
 
 CELL_SIZE = 9
 BOARD_SIZE = 5
+# 表示領域を縦に少し拡張しました
 SCREEN_SIZE = CELL_SIZE * BOARD_SIZE + 1
 VIEW_HEIGHT = SCREEN_SIZE + 10 
 DIRECTIONS = [(-1,-1), (0,-1), (1,-1), (-1,0), (1,0), (-1,1), (0,1), (1,1)]
@@ -17,6 +16,7 @@ CHARACTER_LIST = [(0, 128), (0, 136)]
 
 class Othello25:
     def __init__(self):
+        # 拡張した縦サイズを反映
         pyxel.init(SCREEN_SIZE, VIEW_HEIGHT, title="ATTACK3MOKU")
         try:
             pyxel.load("KAIYOU.pyxres")
@@ -26,10 +26,6 @@ class Othello25:
         pyxel.mouse(True)
         self.reset_game()
         pyxel.run(self.update, self.draw)
-
-    def call_js(self, func_name):
-        if js is not None and hasattr(js.window, func_name):
-            getattr(js.window, func_name)()
 
     def is_decision_pressed(self):
         return pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A) or pyxel.btnp(pyxel.KEY_SPACE)
@@ -62,97 +58,62 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        self.scene = "TITLE_BG" 
-        self.transition_timer = 0
+        self.scene = "TITLE_START"
+        self.transition_timer = 90
         self.cursor_x = 2; self.cursor_y = 2
         pyxel.stop()
-        self.call_js("showTitleBG")
+        if js:
+            try: js.showTitleBG()
+            except: pass
 
-    def start_game(self, difficulty_level, music_id):
-        self.difficulty = difficulty_level
-        self.scene = "GAME"
-        pyxel.playm(music_id, loop=True)
-        self.call_js("clearBG")
-
-    def get_flips(self, x, y, p):
+    def get_flips(self, x, y, player_turn):
         if self.grids[y][x] != 0: return []
         flips = []
-        opp = 3 - p
+        opponent = 3 - player_turn
         for dx, dy in DIRECTIONS:
             nx, ny = x + dx, y + dy
             temp = []
-            while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == opp:
+            while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == opponent:
                 temp.append((nx, ny)); nx += dx; ny += dy
-            if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == p:
+            if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and self.grids[ny][nx] == player_turn:
                 flips.extend(temp)
         return flips
 
-    def apply_move_logic(self, board, x, y, p):
-        board[y][x] = p
-        opp = 3 - p
-        for dx, dy in DIRECTIONS:
-            nx, ny = x + dx, y + dy
-            temp = []
-            while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and board[ny][nx] == opp:
-                temp.append((nx, ny)); nx += dx; ny += dy
-            if 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and board[ny][nx] == p:
-                for fx, fy in temp: board[fy][fx] = p
-
-    def evaluate_board(self, board, player):
-        score = 0
+    def cpu_move(self):
+        valid_moves = []
         for y in range(BOARD_SIZE):
             for x in range(BOARD_SIZE):
-                w = 10 if (x in [0, BOARD_SIZE-1] and y in [0, BOARD_SIZE-1]) else 1
-                if board[y][x] == player: score += w
-                elif board[y][x] != 0: score -= w
-        return score
-
-    def minimax(self, board, depth, player, alpha, beta):
-        if depth == 0: return self.evaluate_board(board, 2)
-        moves = [(x, y) for y in range(BOARD_SIZE) for x in range(BOARD_SIZE) if self.check_valid(board, x, y, player)]
-        if not moves: return self.evaluate_board(board, 2)
-        if player == 2:
-            val = -math.inf
-            for mx, my in moves:
-                b = copy.deepcopy(board); self.apply_move_logic(b, mx, my, 2)
-                val = max(val, self.minimax(b, depth-1, 1, alpha, beta)); alpha = max(alpha, val)
-                if beta <= alpha: break
-            return val
+                flips = self.get_flips(x, y, 2)
+                if flips:
+                    score = self.evaluate_move(x, y, len(flips))
+                    valid_moves.append((x, y, flips, score))
+        if not valid_moves: self.change_turn(); return
+        if self.difficulty == 1:
+            move = random.choice(valid_moves)
+        elif self.difficulty == 2:
+            valid_moves.sort(key=lambda x: x[3], reverse=True)
+            move = random.choice(valid_moves[:2])
         else:
-            val = math.inf
-            for mx, my in moves:
-                b = copy.deepcopy(board); self.apply_move_logic(b, mx, my, 1)
-                val = min(val, self.minimax(b, depth-1, 2, alpha, beta)); beta = min(beta, val)
-                if beta <= alpha: break
-            return val
+            valid_moves.sort(key=lambda x: x[3], reverse=True)
+            move = valid_moves[0]
+        bx, by, bflips, _ = move
+        self.grids[by][bx] = 2
+        for fx, fy in bflips: self.grids[fy][fx] = 2
+        pyxel.play(3, 0)
+        self.check_attack_chance_trigger()
 
-    def check_valid(self, board, x, y, p):
-        if board[y][x] != 0: return False
-        opp = 3 - p
-        for dx, dy in DIRECTIONS:
-            nx, ny = x + dx, y + dy
-            found = False
-            while 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and board[ny][nx] == opp:
-                nx += dx; ny += dy; found = True
-            if found and 0 <= nx < BOARD_SIZE and 0 <= ny < BOARD_SIZE and board[ny][nx] == p: return True
-        return False
-
-    def cpu_move(self):
-        moves = [(x, y) for y in range(BOARD_SIZE) for x in range(BOARD_SIZE) if self.get_flips(x, y, 2)]
-        if not moves: self.change_turn(); return
-        depth = 1 if self.difficulty == 1 else 3 if self.difficulty == 2 else 5
-        best = -math.inf; best_move = moves[0]
-        for mx, my in moves:
-            b = copy.deepcopy(self.grids); self.apply_move_logic(b, mx, my, 2)
-            score = self.minimax(b, depth, 1, -math.inf, math.inf)
-            if score > best: best = score; best_move = (mx, my)
-        self.apply_move_logic(self.grids, best_move[0], best_move[1], 2)
-        pyxel.play(3, 0); self.check_attack_chance_trigger()
+    def evaluate_move(self, x, y, flips_count):
+        score = flips_count
+        if (x, y) in [(0,0), (0,4), (4,0), (4,4)]: score += 100
+        elif x == 0 or x == 4 or y == 0 or y == 4: score += 10
+        else: score -= 5
+        return score
 
     def check_attack_chance_trigger(self):
         empty_count = sum(row.count(0) for row in self.grids)
         if self.attack_chance_available and empty_count <= 8:
-            self.scene = "ATTACK_CHANCE"; self.attack_chance_available = False
+            self.scene = "ATTACK_CHANCE"
+            self.attack_chance_available = False
             pyxel.play(3, 2)
             if self.turn == 2: self.wait_timer = 20
         else: self.change_turn()
@@ -160,8 +121,11 @@ class Othello25:
     def cpu_attack(self):
         targets = [(x, y) for y in range(BOARD_SIZE) for x in range(BOARD_SIZE) if self.grids[y][x] == 1]
         if targets:
-            tx, ty = random.choice(targets); self.grids[ty][tx] = 0; pyxel.play(3, 1)
-        self.scene = "GAME"; self.change_turn()
+            tx, ty = random.choice(targets)
+            self.grids[ty][tx] = 0
+            pyxel.play(3, 1)
+        self.scene = "GAME"
+        self.change_turn()
 
     def change_turn(self):
         next_turn = 3 - self.turn
@@ -175,36 +139,51 @@ class Othello25:
             else: self.pass_timer = 30
 
     def check_game_over(self):
-        p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
-        self.status = 1 if p1 > cpu else 2 if cpu > p1 else 3
+        p1 = sum(row.count(1) for row in self.grids)
+        cpu = sum(row.count(2) for row in self.grids)
+        self.status = 1 if p1 > cpu else (2 if cpu > p1 else 3)
         self.scene = "RESULT_START"
-        self.transition_timer = 120
-        pyxel.stop(); pyxel.playm(2 if self.status == 1 else 3, loop=False)
-        if self.status == 1: self.call_js("showWinBG")
-        elif self.status == 2: self.call_js("showLoseBG")
+        self.transition_timer = 90
+        if js:
+            try:
+                if self.status == 1: js.showWinBG()
+                elif self.status == 2: js.showLoseBG()
+            except: pass
+        pyxel.stop()
+        pyxel.playm(2 if self.status == 1 else 3, loop=False)
 
     def update(self):
-        if self.scene == "TITLE_BG":
-            if self.is_decision_pressed(): self.scene = "TITLE_MENU"
-            return
-        if self.scene == "TITLE_MENU":
-            if pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
-            elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
-            elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
-            elif self.is_decision_pressed(): self.start_game(2, 4)
-            return
-
         if self.pass_timer > 0: self.pass_timer -= 1
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP): self.cursor_y = max(0, self.cursor_y - 1)
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): self.cursor_y = min(BOARD_SIZE - 1, self.cursor_y + 1)
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): self.cursor_x = max(0, self.cursor_x - 1)
         if pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): self.cursor_x = min(BOARD_SIZE - 1, self.cursor_x + 1)
-        
-        if self.scene == "GAME":
-            if self.turn == 1 and self.is_decision_pressed():
+        if self.scene == "TITLE_START" or self.scene == "RESULT_START":
+            self.transition_timer -= 1
+            if self.transition_timer <= 0:
+                if self.scene == "TITLE_START":
+                    self.scene = "TITLE"; pyxel.playm(0, loop=True)
+                else: self.reset_game()
+                if js:
+                    try: js.clearBG()
+                    except: pass
+            return
+        if self.scene == "TITLE":
+            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.KEY_3):
+                self.difficulty = 1 if pyxel.btnp(pyxel.KEY_1) else (2 if pyxel.btnp(pyxel.KEY_2) else 3)
+                self.scene = "GAME"; pyxel.playm(1 if self.difficulty == 1 else (4 if self.difficulty == 2 else 5), loop=True)
+            elif self.is_decision_pressed():
+                self.difficulty = 2; self.scene = "GAME"; pyxel.playm(4, loop=True)
+        elif self.scene == "GAME":
+            if self.turn == 1:
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
-                if 0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE and self.get_flips(mx, my, 1):
-                    self.apply_move_logic(self.grids, mx, my, 1); pyxel.play(3, 0); self.check_attack_chance_trigger()
+                if self.is_decision_pressed():
+                    if 0 <= mx < BOARD_SIZE and 0 <= my < BOARD_SIZE:
+                        flips = self.get_flips(mx, my, 1)
+                        if flips:
+                            self.grids[my][mx] = 1
+                            for fx, fy in flips: self.grids[fy][fx] = 1
+                            pyxel.play(3, 0); self.check_attack_chance_trigger()
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_move()
@@ -216,38 +195,36 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_attack()
-        elif self.scene == "RESULT_START":
-            self.transition_timer -= 1
-            if self.transition_timer <= 0:
-                self.reset_game()
 
     def draw(self):
-        if self.scene == "TITLE_BG": return
-        if self.scene == "TITLE_MENU":
-            pyxel.cls(0)
-            pyxel.text(2, 5, "SELECT LEVEL", pyxel.frame_count % 16)
-            pyxel.text(5, 18, "1: LV1", 11); pyxel.text(5, 26, "2: LV2", 10); pyxel.text(5, 34, "3: LV3", 8)
-            return
         pyxel.cls(0)
-        for i in range(BOARD_SIZE + 1):
-            pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
-            pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
-        for y in range(BOARD_SIZE):
-            for x in range(BOARD_SIZE):
-                if self.grids[y][x]:
-                    u, v = CHARACTER_LIST[self.grids[y][x] - 1]
-                    pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
-        if self.turn == 1: pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
-        if self.scene == "RESULT_START":
-            if self.status == 3:
-                pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
-                pyxel.text(10, 35, "DRAW!", 7)
+        if self.scene == "TITLE_START": return
+        if self.scene == "TITLE":
+            pyxel.text(2, 5, "ATTACK3MOKU", pyxel.frame_count % 16)
+            pyxel.text(5, 18, "LV1", 11); pyxel.text(5, 26, "LV2", 10); pyxel.text(5, 34, "LV3", 8)
         else:
-            p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
-            y_pos = SCREEN_SIZE + 2
-            pyxel.text(2, y_pos, f"YOU{p1}", 11); pyxel.text(25, y_pos, f"CPU{cpu}", 8)
-            if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
-            if self.scene == "ATTACK_CHANCE":
-                pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, 10); pyxel.text(2, 20, "ATTACK!", 10)
+            for i in range(BOARD_SIZE + 1):
+                pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
+                pyxel.line(0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, i * CELL_SIZE, 1)
+            for y in range(BOARD_SIZE):
+                for x in range(BOARD_SIZE):
+                    if self.grids[y][x]:
+                        u, v = CHARACTER_LIST[self.grids[y][x] - 1]
+                        pyxel.blt(x * CELL_SIZE + 1, y * CELL_SIZE + 1, 0, u, v, 8, 8, 0)
+            if self.turn == 1: pyxel.rectb(self.cursor_x * CELL_SIZE, self.cursor_y * CELL_SIZE, CELL_SIZE + 1, CELL_SIZE + 1, 11)
+            if self.scene != "RESULT_START":
+                p1 = sum(row.count(1) for row in self.grids)
+                cpu = sum(row.count(2) for row in self.grids)
+                y_pos = SCREEN_SIZE + 2
+                pyxel.text(2, y_pos, f"YOU:{p1}", 7); pyxel.text(2, y_pos, f"YOU:{p1}", 12)
+                pyxel.text(25, y_pos, f"CPU:{cpu}", 7); pyxel.text(25, y_pos, f"CPU:{cpu}", 8)
+                if self.pass_timer > 0: pyxel.rect(5, 15, 35, 10, 0); pyxel.rectb(5, 15, 35, 10, 7); pyxel.text(12, 18, "PASS", 7)
+                if self.scene == "ATTACK_CHANCE":
+                    c = 10 if pyxel.frame_count % 10 < 5 else 7
+                    pyxel.rectb(0, 0, SCREEN_SIZE, SCREEN_SIZE, c); pyxel.text(2, 20, "ATTACK!", 10)
+            elif self.status == 3:
+                pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
+                c = 7 if pyxel.frame_count % 10 < 5 else 0
+                pyxel.text(10, 35, "DRAW!", c)
 
 Othello25()
