@@ -24,7 +24,6 @@ class Othello25:
             pass
         self.init_sound()
         pyxel.mouse(True)
-        # 初期状態を設定してから、最初のタイトル画像を表示する
         self.reset_game()
         pyxel.run(self.update, self.draw)
 
@@ -63,11 +62,10 @@ class Othello25:
         self.turn = 1; self.status = 0; self.wait_timer = 0
         self.pass_timer = 0; self.attack_chance_available = True
         self.difficulty = 2
-        self.scene = "TITLE" 
+        self.scene = "TITLE_BG" 
         self.transition_timer = 0
         self.cursor_x = 2; self.cursor_y = 2
         pyxel.stop()
-        # 画像表示を強制的に要求
         self.call_js("showTitleBG")
 
     def start_game(self, difficulty_level, music_id):
@@ -186,7 +184,10 @@ class Othello25:
         elif self.status == 2: self.call_js("showLoseBG")
 
     def update(self):
-        if self.scene == "TITLE":
+        if self.scene == "TITLE_BG":
+            if self.is_decision_pressed(): self.scene = "TITLE_MENU"
+            return
+        if self.scene == "TITLE_MENU":
             if pyxel.btnp(pyxel.KEY_1): self.start_game(1, 1)
             elif pyxel.btnp(pyxel.KEY_2): self.start_game(2, 4)
             elif pyxel.btnp(pyxel.KEY_3): self.start_game(3, 5)
@@ -207,7 +208,6 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_move()
-                
         elif self.scene == "ATTACK_CHANCE":
             if self.turn == 1 and self.is_decision_pressed():
                 mx, my = (pyxel.mouse_x // CELL_SIZE, pyxel.mouse_y // CELL_SIZE) if pyxel.mouse_x >= 0 else (self.cursor_x, self.cursor_y)
@@ -216,14 +216,18 @@ class Othello25:
             elif self.turn == 2:
                 if self.wait_timer > 0: self.wait_timer -= 1
                 else: self.cpu_attack()
-                
         elif self.scene == "RESULT_START":
             self.transition_timer -= 1
             if self.transition_timer <= 0:
                 self.reset_game()
 
     def draw(self):
-        if self.scene == "TITLE": return
+        if self.scene == "TITLE_BG": return
+        if self.scene == "TITLE_MENU":
+            pyxel.cls(0)
+            pyxel.text(2, 5, "SELECT LEVEL", pyxel.frame_count % 16)
+            pyxel.text(5, 18, "1: LV1", 11); pyxel.text(5, 26, "2: LV2", 10); pyxel.text(5, 34, "3: LV3", 8)
+            return
         pyxel.cls(0)
         for i in range(BOARD_SIZE + 1):
             pyxel.line(i * CELL_SIZE, 0, i * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 1)
