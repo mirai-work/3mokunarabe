@@ -253,7 +253,7 @@ class Othello25:
                     pyxel.circ(23, 23, 8, 7); pyxel.line(19, 20, 21, 22, 0); pyxel.line(25, 20, 27, 22, 0); pyxel.line(20, 27, 26, 27, 0)
                     c = 7 if pyxel.frame_count % 10 < 5 else 0
                     pyxel.text(10, 35, "DRAW!", c)
-           else:
+            else:
                 p1 = sum(row.count(1) for row in self.grids); cpu = sum(row.count(2) for row in self.grids)
                 y_pos = SCREEN_SIZE + 2
                 # YOUは1番の石（色番号:128/136のインデックスに対応）、CPUは2番の石の色へ変更
