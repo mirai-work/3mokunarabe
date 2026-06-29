@@ -6,33 +6,45 @@
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
 <style>
     body { margin:0; width:100vw; height:100vh; overflow:hidden; background:#000; }
+    
+    /* 画像を表示するレイヤー（一番手前） */
     #bg {
         position: fixed; top:0; left:0;
         width: 100vw; height: 100vh;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        z-index: 0;
+        z-index: 10; /* Pyxelよりも手前に表示 */
+        display: none; /* 初期状態は非表示 */
+        pointer-events: none; /* ★超重要：クリックを貫通させて奥のPyxelに届ける */
     }
+    
+    /* Pyxelのゲーム画面レイヤー（奥） */
     pyxel-run {
         position: absolute !important;
         left: 50% !important; top: 50% !important;
         transform: translate(-50%, -50%) !important;
-        z-index: 1;
+        z-index: 1; /* 画像よりも奥に配置 */
     }
 </style>
 <script>
     function setBG(file) {
         const bg = document.getElementById("bg");
         bg.style.backgroundImage = `url("${file}")`;
+        bg.style.display = "block"; // 画像を表示
     }
     window.showTitleBG = () => setBG("title.jpg");
     window.showWinBG = () => setBG("win.jpg");
     window.showLoseBG = () => setBG("lose.jpg");
-    window.clearBG = () => setBG("");
+    
+    window.clearBG = () => {
+        const bg = document.getElementById("bg");
+        bg.style.display = "none"; // 画像を非表示にして奥のゲームを見せる
+    };
 </script>
 </head>
 <body>
-       <pyxel-run root="." name="gomoku01.py"></pyxel-run>
+    <div id="bg"></div>
+    <pyxel-run root="." name="gomoku01.py"></pyxel-run>
 </body>
 </html>
